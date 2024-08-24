@@ -189,6 +189,67 @@ export class CdkManagedRagStack extends cdk.Stack {
       type: 'VECTORSEARCH',
     });
 
+    const OpenSearchSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-security-policy-for-${projectName}`, {
+      name: `opensearch-security-policy-for-${projectName}`,
+      policy: `{
+        "Rules":[
+          {
+            "ResourceType":"collection",
+            "Resource":["collection/rag-collection"]
+          },
+          {
+            ResourceType: "dashboard",
+            Resource: ["collection/rag-collection"],
+          },
+        ],
+        "AllowFromPublic": true,
+        "AWSOwnedKey":true
+      }`,
+      type: 'network',    
+      description: `opensearch security policy for ${projectName}`,
+    });
+    OpenSearchCollection.addDependency(OpenSearchSecurityPolicy);
+
+    // Data collection policy
+    /*const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
+      name: `opensearch-data-collection-policy-for-${projectName}`,
+      type: "data",
+      policy: JSON.stringify([
+        {
+          Rules: [
+            {
+              Resource: ["collection/rag-collection"],
+              Permission: [
+                "aoss:CreateCollectionItems",
+                "aoss:DeleteCollectionItems",
+                "aoss:UpdateCollectionItems",
+                "aoss:DescribeCollectionItems",
+              ],
+              ResourceType: "collection",
+            },
+            {
+              Resource: ["index/rag-collection/*"],
+              Permission: [
+                "aoss:CreateIndex",
+                "aoss:DeleteIndex",
+                "aoss:UpdateIndex",
+                "aoss:DescribeIndex",
+                "aoss:ReadDocument",
+                "aoss:WriteDocument",
+              ], 
+              ResourceType: "index",
+            },
+          ],
+          Principal: [
+            `arn:aws:iam::${ctx.accountId}:role/aoss-lambda-api-executor-role`,
+            props.executorRole.roleArn,
+            `arn:aws:iam::${ctx.accountId}:role/AnyOtherRole`,
+          ],
+        },
+      ]),
+    });
+    OpenSearchCollection.addDependency(dataAccessPolicy); */
+
     // Knowledge Base Role
   /*  const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
       roleName: `role-knowledge-base-for-${projectName}-${region}`,
