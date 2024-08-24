@@ -201,7 +201,7 @@ export class CdkManagedRagStack extends cdk.Stack {
               Resource: ["collection/rag-collection"],
             }
           ],
-          AllowFromPublic: false,
+          AllowFromPublic: true,
         },
       ]),
     });
