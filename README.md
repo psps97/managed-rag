@@ -8,6 +8,8 @@
 
 [class CfnCollection (construct)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_opensearchserverless.CfnCollection.html)
 
+[Encryption in Amazon OpenSearch Serverless](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-encryption.html)
+
 [AOSS OpenSearch Serverless Development using AWS CDK](https://www.pujan.net/posts/opensearch-serverless-development-using-aws-cdk/)
 
 [Building Q&A application using Knowledge Bases for Amazon Bedrock - Retrieve API](https://github.com/aws-samples/amazon-bedrock-workshop/blob/main/02_KnowledgeBases_and_RAG/3_Langchain-rag-retrieve-api-claude-3.ipynb)
