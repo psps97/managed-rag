@@ -197,7 +197,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(encPolicy);
 
-    const natPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
+    const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
       name: `network-policy`,
       type: 'network',    
       description: `opensearch security policy for ${projectName}`,
@@ -206,27 +206,24 @@ export class CdkManagedRagStack extends cdk.Stack {
           Rules: [
             {
               ResourceType: "collection",
-              // Resource: ["collection/rag-collection"],
               Resource: ["collection/*"],              
             }
           ],
           AllowFromPublic: true,          
-          // AWSOwnedKey: true
         },
       ]), 
       
     });
-    OpenSearchCollection.addDependency(natPolicy);
+    OpenSearchCollection.addDependency(netPolicy);
 
-    // Data collection policy
-    /* const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
-      name: `opensearch-data-collection-policy-for-${projectName}`,
+    const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
+      name: `data-collection-policy`,
       type: "data",
       policy: JSON.stringify([
         {
           Rules: [
             {
-              Resource: ["collection/rag-collection"],
+              Resource: ["collection/*"],
               Permission: [
                 "aoss:CreateCollectionItems",
                 "aoss:DeleteCollectionItems",
@@ -236,7 +233,7 @@ export class CdkManagedRagStack extends cdk.Stack {
               ResourceType: "collection",
             },
             {
-              Resource: ["index/rag-collection/*"],
+              Resource: ["index/*"],
               Permission: [
                 "aoss:CreateIndex",
                 "aoss:DeleteIndex",
@@ -248,15 +245,15 @@ export class CdkManagedRagStack extends cdk.Stack {
               ResourceType: "index",
             },
           ],
-          Principal: [
-            `arn:aws:iam::${ctx.accountId}:role/aoss-lambda-api-executor-role`,
+        /*  Principal: [
+            `arn:aws:iam::${accountId}:role/aoss-lambda-api-executor-role`,
             props.executorRole.roleArn,
-            `arn:aws:iam::${ctx.accountId}:role/AnyOtherRole`,
-          ],
+            `arn:aws:iam::${accountId}:role/AnyOtherRole`,
+          ], */
         },
       ]),
     });
-    OpenSearchCollection.addDependency(dataAccessPolicy);*/
+    OpenSearchCollection.addDependency(dataAccessPolicy);
 
     // Knowledge Base Role
   /*  const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
