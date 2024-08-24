@@ -8,6 +8,20 @@
 
 여기에서는 완전관리형 RAG(Fully Managed RAG)를 이용하여 편리하게 RAG 구성하는 방법을 설명합니다.
 
+
+## 진행현황
+
+CDK로 AOSS 설치후 Knowledge Base를 연결할때 index name이 필요한데, index name은 Lambda로 생성되므로, 한꺼번에 빌드하지 못하는 이슈가 있습니다. 
+
+Knowledge base에서 신규 생성시는 "bedrock-knowledge-base-default-index"라는 초기값을 가지나, CDK로 설치시는 아래와 같은 에러가 발생합니다. 따라서 현재 구조에서는 CDK로 OpenSearch Serverless와 Knowledge Base를 동시에 설치할 수 없습니다. 
+
+```text
+4:46:41 AM | CREATE_FAILED        | AWS::Bedrock::KnowledgeBase               | knowledgebaseformanagedragchatbot
+Resource handler returned message: "The knowledge base storage configuration provided is invalid... no such index [bedrock-knowledge-base-default-index] (Service: BedrockAgent, Stat
+us Code: 400, Request ID: a9880897-4eac-462c-917f-4438a0f42917)" (RequestToken: 9c25d0e5-cbc2-9b2c-a2a0-ad22b4bf544a, HandlerErrorCode: InvalidRequest)
+```
+
+
 ## Reference
 
 [class CfnKnowledgeBase (construct)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrock.CfnKnowledgeBase.html)
