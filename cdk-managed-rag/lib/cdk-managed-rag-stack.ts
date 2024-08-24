@@ -25,7 +25,7 @@ const accountId = process.env.CDK_DEFAULT_ACCOUNT;
 const debug = false;
 const stage = 'dev';
 const s3_prefix = 'docs';
-const projectName = `korean-chatbot-with-rag`; 
+const projectName = `managed-rag-chatbot`; 
 const bucketName = `storage-for-${projectName}-${accountId}-${region}`; 
 let kendra_region = process.env.CDK_DEFAULT_REGION;   //  "us-west-2"
 const rag_method = 'RetrievalPrompt'; // RetrievalPrompt, RetrievalQA, ConversationalRetrievalChain
@@ -183,7 +183,7 @@ export class CdkManagedRagStack extends cdk.Stack {
 
     // OpenSearch Serverless
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
-      name: `opensearch-correction-for-${projectName}`,    
+      name: projectName,    
       description: `opensearch correction for ${projectName}`,
       standbyReplicas: 'standbyReplicas',
       type: 'VECTORSEARCH',
