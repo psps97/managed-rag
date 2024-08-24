@@ -182,8 +182,9 @@ export class CdkManagedRagStack extends cdk.Stack {
     super(scope, id, props);
 
     // OpenSearch Serverless
+    const collectionName = projectName
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
-      name: projectName,    
+      name: collectionName,    
       description: `opensearch correction for ${projectName}`,
       standbyReplicas: 'DISABLED',
       type: 'VECTORSEARCH',
@@ -223,6 +224,28 @@ export class CdkManagedRagStack extends cdk.Stack {
         {
           Rules: [
             {
+              Resource: [`collection/${collectionName}`],
+              Permission: [
+                "aoss:CreateCollectionItems",
+                "aoss:DeleteCollectionItems",
+                "aoss:UpdateCollectionItems",
+                "aoss:DescribeCollectionItems",
+              ],
+              ResourceType: "collection",
+            },
+            {
+              Resource: [`index/${collectionName}/*`],
+              Permission: [
+                "aoss:CreateIndex",
+                "aoss:DeleteIndex",
+                "aoss:UpdateIndex",
+                "aoss:DescribeIndex",
+                "aoss:ReadDocument",
+                "aoss:WriteDocument",
+              ], 
+              ResourceType: "index",
+            }
+            /*{
               Resource: ["collection/*"],
               Permission: [
                 "aoss:CreateCollectionItems",
@@ -231,7 +254,19 @@ export class CdkManagedRagStack extends cdk.Stack {
                 "aoss:DescribeCollectionItems",
               ],
               ResourceType: "collection",
-            }
+            },
+            {
+              Resource: ["index/*"],
+              Permission: [
+                "aoss:CreateIndex",
+                "aoss:DeleteIndex",
+                "aoss:UpdateIndex",
+                "aoss:DescribeIndex",
+                "aoss:ReadDocument",
+                "aoss:WriteDocument",
+              ], 
+              ResourceType: "index",
+            }, */
           ],
         /*  Principal: [
             `arn:aws:iam::${accountId}:role/aoss-lambda-api-executor-role`,
