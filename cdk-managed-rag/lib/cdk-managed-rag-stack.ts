@@ -176,7 +176,7 @@ const titan_embedding_v2 = [  // dimension = 1024
 const LLM_for_chat = claude3_sonnet;
 const LLM_for_multimodal = claude3_sonnet;
 const LLM_embedding = titan_embedding_v2;
-const vectorIndexName = "idx-rag"
+const vectorIndexName = "bedrock-knowledge-base-default-index"
 
 export class CdkManagedRagStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -257,6 +257,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
       name: `encription-policy`,
       type: "encryption",
+      description: `opensearch encryption policy for ${projectName}`,
       policy:
         '{"Rules":[{"ResourceType":"collection","Resource":["collection/*"]}],"AWSOwnedKey":true}',      
     });
@@ -265,7 +266,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
       name: `network-policy`,
       type: 'network',    
-      description: `opensearch security policy for ${projectName}`,
+      description: `opensearch network policy for ${projectName}`,
       policy: JSON.stringify([
         {
           Rules: [
@@ -321,6 +322,8 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
 
+
+
     const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
       name: `knowledge-base-for-${projectName}`,
       description: `knowledge base for ${projectName}`,
@@ -341,14 +344,13 @@ export class CdkManagedRagStack extends cdk.Stack {
       storageConfiguration: {
         type: 'OPENSEARCH_SERVERLESS',
     
-        // the properties below are optional
         opensearchServerlessConfiguration: {
           collectionArn: OpenSearchCollection.attrArn,
           vectorIndexName: vectorIndexName,
           fieldMapping: {            
-            textField: 'text',
-            vectorField: 'vector_field',
-            metadataField: 'metadata',
+            textField: 'AMAZON_BEDROCK_TEXT_CHUNK',
+            vectorField: 'bedrock-knowledge-base-default-vector',
+            metadataField: 'AMAZON_BEDROCK_METADATA',
           },          
         },
       },          
