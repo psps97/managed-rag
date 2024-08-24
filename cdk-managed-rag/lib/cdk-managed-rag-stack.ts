@@ -176,75 +176,74 @@ const titan_embedding_v2 = [  // dimension = 1024
 const LLM_for_chat = claude3_sonnet;
 const LLM_for_multimodal = claude3_sonnet;
 const LLM_embedding = titan_embedding_v2;
+const vectorIndexName = "idx-rag"
 
 export class CdkManagedRagStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-        // Knowledge Base Role
-        const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
-          roleName: `role-knowledge-base-for-${projectName}-${region}`,
-          assumedBy: new iam.CompositePrincipal(
-            new iam.ServicePrincipal("bedrock.amazonaws.com")
-          )
-        });
+    // Knowledge Base Role
+    const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
+      roleName: `role-knowledge-base-for-${projectName}-${region}`,
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal("bedrock.amazonaws.com")
+      )
+    });
     
-        const bedrockInvokePolicy = new iam.PolicyStatement({ 
-          effect: iam.Effect.ALLOW,
-          resources: [
-            `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`,
-            `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`,
-            `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v1`,
-            `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
-          ],
-          // resources: ['*'],
-          actions: [
-            "bedrock:InvokeModel", 
-            "bedrock:InvokeModelEndpoint", 
-            "bedrock:InvokeModelEndpointAsync"
-          ],
-        });        
-        knowledge_base_role.attachInlinePolicy( 
-          new iam.Policy(this, `bedrock-invoke-policy-for-${projectName}`, {
-            statements: [bedrockInvokePolicy],
-          }),
-        );  
+    const bedrockInvokePolicy = new iam.PolicyStatement({ 
+      effect: iam.Effect.ALLOW,
+      resources: [
+        `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`,
+        `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`,
+        `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v1`,
+        `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
+      ],
+      // resources: ['*'],
+      actions: [
+        "bedrock:InvokeModel", 
+        "bedrock:InvokeModelEndpoint", 
+        "bedrock:InvokeModelEndpointAsync"
+      ],
+    });        
+    knowledge_base_role.attachInlinePolicy( 
+      new iam.Policy(this, `bedrock-invoke-policy-for-${projectName}`, {
+        statements: [bedrockInvokePolicy],
+      }),
+    );  
     
-        const bedrockKnowledgeBaseS3Policy = new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          resources: ['*'],
-          actions: [
-            "s3:GetBucketLocation",
-            "s3:GetObject",
-            "s3:ListBucket",
-            "s3:ListBucketMultipartUploads",
-            "s3:ListMultipartUploadParts",
-            "s3:AbortMultipartUpload",
-            "s3:CreateBucket",
-            "s3:PutObject",
-            "s3:PutBucketLogging",
-            "s3:PutBucketVersioning",
-            "s3:PutBucketNotification",
-          ],
-        });
-        knowledge_base_role.attachInlinePolicy( 
-          new iam.Policy(this, `knowledge-base-s3-policy-for-${projectName}`, {
-            statements: [bedrockKnowledgeBaseS3Policy],
-          }),
-        );  
+    const bedrockKnowledgeBaseS3Policy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: [
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts",
+        "s3:AbortMultipartUpload",
+        "s3:CreateBucket",
+        "s3:PutObject",
+        "s3:PutBucketLogging",
+        "s3:PutBucketVersioning",
+        "s3:PutBucketNotification",
+      ],
+    });
+    knowledge_base_role.attachInlinePolicy( 
+      new iam.Policy(this, `knowledge-base-s3-policy-for-${projectName}`, {
+        statements: [bedrockKnowledgeBaseS3Policy],
+      }),
+    );  
     
-        const knowledgeBaseOpenSearchPolicy = new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          resources: ['*'],
-          actions: ["aoss:APIAccessAll"],
-        });
-        knowledge_base_role.attachInlinePolicy( 
-          new iam.Policy(this, `bedrock-agent-opensearch-policy-for-${projectName}`, {
-            statements: [knowledgeBaseOpenSearchPolicy],
-          }),
-        );  
-    
-    
+    const knowledgeBaseOpenSearchPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: ["aoss:APIAccessAll"],
+    });
+    knowledge_base_role.attachInlinePolicy( 
+      new iam.Policy(this, `bedrock-agent-opensearch-policy-for-${projectName}`, {
+        statements: [knowledgeBaseOpenSearchPolicy],
+      }),
+    );  
 
     // OpenSearch Serverless
     const collectionName = projectName
@@ -322,7 +321,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
 
-    /* const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
+    const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
       name: `knowledge-base-for-${projectName}`,
       description: `knowledge base for ${projectName}`,
       roleArn: knowledge_base_role.roleArn,
@@ -344,16 +343,16 @@ export class CdkManagedRagStack extends cdk.Stack {
     
         // the properties below are optional
         opensearchServerlessConfiguration: {
-          collectionArn: 'collectionArn',
-          vectorIndexName: 'vectorIndexName',
-          fieldMapping: {
-            metadataField: 'metadataField',
-            textField: 'textField',
-            vectorField: 'vectorField',
+          collectionArn: OpenSearchCollection.attrArn,
+          vectorIndexName: vectorIndexName,
+          fieldMapping: {            
+            textField: 'text',
+            vectorField: 'vector_field',
+            metadataField: 'metadata',
           },          
         },
       },          
-    }); */
+    }); 
 
     
 
