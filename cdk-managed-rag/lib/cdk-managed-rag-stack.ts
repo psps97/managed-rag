@@ -185,7 +185,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
       name: projectName,    
       description: `opensearch correction for ${projectName}`,
-      standbyReplicas: 'standbyReplicas',
+      standbyReplicas: 'DISABLED',
       type: 'VECTORSEARCH',
     });
 
