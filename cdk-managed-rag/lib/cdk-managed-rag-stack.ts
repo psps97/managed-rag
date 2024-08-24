@@ -183,7 +183,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     super(scope, id, props);
 
     // Knowledge Base Role
-    const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
+    /* const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
       roleName: `role-knowledge-base-for-${projectName}-${region}`,
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal("bedrock.amazonaws.com")
@@ -354,7 +354,7 @@ export class CdkManagedRagStack extends cdk.Stack {
           },          
         },
       },          
-    }); 
+    }); */
 
     
 
