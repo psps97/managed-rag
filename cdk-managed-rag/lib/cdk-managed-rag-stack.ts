@@ -193,7 +193,7 @@ export class CdkManagedRagStack extends cdk.Stack {
       name: `encription-policy`,
       type: "encryption",
       policy:
-        '{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',      
+        '{"Rules":[{"ResourceType":"collection","Resource":["collection/*"]}],"AWSOwnedKey":true}',      
     });
     OpenSearchCollection.addDependency(encPolicy);
 
@@ -206,7 +206,8 @@ export class CdkManagedRagStack extends cdk.Stack {
           Rules: [
             {
               ResourceType: "collection",
-              Resource: ["collection/rag-collection"],
+              // Resource: ["collection/rag-collection"],
+              Resource: ["collection/*"],              
             }
           ],
           AllowFromPublic: true,          
