@@ -16,6 +16,8 @@
 
 [Encryption in Amazon OpenSearch Serverless](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-encryption.html)
 
+[On AWS CDK and Amazon Bedrock Knowledge bases](https://medium.com/@micheldirk/on-aws-cdk-and-amazon-bedrock-knowledge-bases-14c7b208e4cb)
+
 [AOSS OpenSearch Serverless Development using AWS CDK](https://www.pujan.net/posts/opensearch-serverless-development-using-aws-cdk/)
 
 [Building Q&A application using Knowledge Bases for Amazon Bedrock - Retrieve API](https://github.com/aws-samples/amazon-bedrock-workshop/blob/main/02_KnowledgeBases_and_RAG/3_Langchain-rag-retrieve-api-claude-3.ipynb)
