@@ -231,19 +231,7 @@ export class CdkManagedRagStack extends cdk.Stack {
                 "aoss:DescribeCollectionItems",
               ],
               ResourceType: "collection",
-            },
-            {
-              Resource: ["index/*"],
-              Permission: [
-                "aoss:CreateIndex",
-                "aoss:DeleteIndex",
-                "aoss:UpdateIndex",
-                "aoss:DescribeIndex",
-                "aoss:ReadDocument",
-                "aoss:WriteDocument",
-              ], 
-              ResourceType: "index",
-            },
+            }
           ],
         /*  Principal: [
             `arn:aws:iam::${accountId}:role/aoss-lambda-api-executor-role`,
