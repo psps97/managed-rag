@@ -202,6 +202,7 @@ export class CdkManagedRagStack extends cdk.Stack {
             }
           ],
           AllowFromPublic: true,
+          AWSOwnedKey: true
         },
       ]),
     });
