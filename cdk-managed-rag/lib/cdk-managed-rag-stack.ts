@@ -181,6 +181,71 @@ export class CdkManagedRagStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+        // Knowledge Base Role
+        const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
+          roleName: `role-knowledge-base-for-${projectName}-${region}`,
+          assumedBy: new iam.CompositePrincipal(
+            new iam.ServicePrincipal("bedrock.amazonaws.com")
+          )
+        });
+    
+        const bedrockInvokePolicy = new iam.PolicyStatement({ 
+          effect: iam.Effect.ALLOW,
+          resources: [
+            `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`,
+            `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`,
+            `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v1`,
+            `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
+          ],
+          // resources: ['*'],
+          actions: [
+            "bedrock:InvokeModel", 
+            "bedrock:InvokeModelEndpoint", 
+            "bedrock:InvokeModelEndpointAsync"
+          ],
+        });        
+        knowledge_base_role.attachInlinePolicy( 
+          new iam.Policy(this, `bedrock-invoke-policy-for-${projectName}`, {
+            statements: [bedrockInvokePolicy],
+          }),
+        );  
+    
+        const bedrockKnowledgeBaseS3Policy = new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          resources: ['*'],
+          actions: [
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:ListMultipartUploadParts",
+            "s3:AbortMultipartUpload",
+            "s3:CreateBucket",
+            "s3:PutObject",
+            "s3:PutBucketLogging",
+            "s3:PutBucketVersioning",
+            "s3:PutBucketNotification",
+          ],
+        });
+        knowledge_base_role.attachInlinePolicy( 
+          new iam.Policy(this, `knowledge-base-s3-policy-for-${projectName}`, {
+            statements: [bedrockKnowledgeBaseS3Policy],
+          }),
+        );  
+    
+        const knowledgeBaseOpenSearchPolicy = new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          resources: ['*'],
+          actions: ["aoss:APIAccessAll"],
+        });
+        knowledge_base_role.attachInlinePolicy( 
+          new iam.Policy(this, `bedrock-agent-opensearch-policy-for-${projectName}`, {
+            statements: [knowledgeBaseOpenSearchPolicy],
+          }),
+        );  
+    
+    
+
     // OpenSearch Serverless
     const collectionName = projectName
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
@@ -268,80 +333,18 @@ export class CdkManagedRagStack extends cdk.Stack {
               ResourceType: "index",
             }, */
           ],
-        /*  Principal: [
-            `arn:aws:iam::${accountId}:role/aoss-lambda-api-executor-role`,
-            props.executorRole.roleArn,
-            `arn:aws:iam::${accountId}:role/AnyOtherRole`,
-          ], */
+          Principal: [
+            knowledge_base_role.roleArn,
+            `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
+            //props.executorRole.roleArn,
+            `arn:aws:iam::${accountId}:role/administration`,            
+          ], 
         },
       ]),
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
 
-    // Knowledge Base Role
-  /*  const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
-      roleName: `role-knowledge-base-for-${projectName}-${region}`,
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal("bedrock.amazonaws.com")
-      )
-    });
-
-    const bedrockInvokePolicy = new iam.PolicyStatement({ 
-      effect: iam.Effect.ALLOW,
-      resources: [
-        `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`,
-        `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`,
-        `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v1`,
-        `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
-      ],
-      // resources: ['*'],
-      actions: [
-        "bedrock:InvokeModel", 
-        "bedrock:InvokeModelEndpoint", 
-        "bedrock:InvokeModelEndpointAsync"
-      ],
-    });        
-    knowledge_base_role.attachInlinePolicy( 
-      new iam.Policy(this, `bedrock-invoke-policy-for-${projectName}`, {
-        statements: [bedrockInvokePolicy],
-      }),
-    );  
-
-    const bedrockKnowledgeBaseS3Policy = new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: ['*'],
-      actions: [
-        "s3:GetBucketLocation",
-        "s3:GetObject",
-        "s3:ListBucket",
-        "s3:ListBucketMultipartUploads",
-        "s3:ListMultipartUploadParts",
-        "s3:AbortMultipartUpload",
-        "s3:CreateBucket",
-        "s3:PutObject",
-        "s3:PutBucketLogging",
-        "s3:PutBucketVersioning",
-        "s3:PutBucketNotification",
-      ],
-    });
-    knowledge_base_role.attachInlinePolicy( 
-      new iam.Policy(this, `knowledge-base-s3-policy-for-${projectName}`, {
-        statements: [bedrockKnowledgeBaseS3Policy],
-      }),
-    );  
-
-    const knowledgeBaseOpenSearchPolicy = new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: ['*'],
-      actions: ["aoss:APIAccessAll"],
-    });
-    knowledge_base_role.attachInlinePolicy( 
-      new iam.Policy(this, `bedrock-agent-opensearch-policy-for-${projectName}`, {
-        statements: [knowledgeBaseOpenSearchPolicy],
-      }),
-    );  
-
-    const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
+    /* const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
       name: `knowledge-base-for-${projectName}`,
       description: `knowledge base for ${projectName}`,
       roleArn: knowledge_base_role.roleArn,
