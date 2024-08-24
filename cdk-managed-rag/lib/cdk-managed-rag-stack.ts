@@ -182,36 +182,33 @@ export class CdkManagedRagStack extends cdk.Stack {
     super(scope, id, props);
 
     // OpenSearch Serverless
-    const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction`, {
+    const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
       name: projectName,    
-      description: `opensearch correction`,
+      description: `opensearch correction for ${projectName}`,
       standbyReplicas: 'DISABLED',
       type: 'VECTORSEARCH',
     });
 
-    const OpenSearchSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-security-policy`, {
+    const OpenSearchSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-security-policy-for-${projectName}`, {
       name: `opensearch-security-policy`,
-      policy: `{
-        "Rules":[
-          {
-            "ResourceType":"collection",
-            "Resource":["collection/rag-collection"]
-          },
-          {
-            ResourceType: "dashboard",
-            Resource: ["collection/rag-collection"],
-          },
-        ],
-        "AllowFromPublic": true,
-        "AWSOwnedKey":true
-      }`,
       type: 'network',    
-      description: `opensearch security policy`,
+      description: `opensearch security policy for ${projectName}`,
+      policy: JSON.stringify([
+        {
+          Rules: [
+            {
+              ResourceType: "collection",
+              Resource: ["collection/rag-collection"],
+            }
+          ],
+          AllowFromPublic: false,
+        },
+      ]),
     });
     OpenSearchCollection.addDependency(OpenSearchSecurityPolicy);
 
     // Data collection policy
-    /*const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
+    /* const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
       name: `opensearch-data-collection-policy-for-${projectName}`,
       type: "data",
       policy: JSON.stringify([
@@ -248,7 +245,7 @@ export class CdkManagedRagStack extends cdk.Stack {
         },
       ]),
     });
-    OpenSearchCollection.addDependency(dataAccessPolicy); */
+    OpenSearchCollection.addDependency(dataAccessPolicy);*/
 
     // Knowledge Base Role
   /*  const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
