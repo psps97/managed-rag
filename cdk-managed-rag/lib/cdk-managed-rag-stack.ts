@@ -310,31 +310,9 @@ export class CdkManagedRagStack extends cdk.Stack {
               ], 
               ResourceType: "index",
             }
-            /*{
-              Resource: ["collection/*"],
-              Permission: [
-                "aoss:CreateCollectionItems",
-                "aoss:DeleteCollectionItems",
-                "aoss:UpdateCollectionItems",
-                "aoss:DescribeCollectionItems",
-              ],
-              ResourceType: "collection",
-            },
-            {
-              Resource: ["index/*"],
-              Permission: [
-                "aoss:CreateIndex",
-                "aoss:DeleteIndex",
-                "aoss:UpdateIndex",
-                "aoss:DescribeIndex",
-                "aoss:ReadDocument",
-                "aoss:WriteDocument",
-              ], 
-              ResourceType: "index",
-            }, */
           ],
           Principal: [
-            knowledge_base_role.roleArn,
+          //  knowledge_base_role.roleArn,
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             //props.executorRole.roleArn,
             `arn:aws:iam::${accountId}:role/administration`,            
