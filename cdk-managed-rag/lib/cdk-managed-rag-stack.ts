@@ -193,9 +193,9 @@ export class CdkManagedRagStack extends cdk.Stack {
       name: `opensearch-security-policy`,
       type: 'network',    
       description: `opensearch security policy for ${projectName}`,
-      policy:'{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',
+      // policy:'{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',
       
-    /*  policy: JSON.stringify([
+      policy: JSON.stringify([
         {
           Rules: [
             {
@@ -204,9 +204,9 @@ export class CdkManagedRagStack extends cdk.Stack {
             }
           ],
           AllowFromPublic: true,          
-          AWSOwnedKey: true
+          // AWSOwnedKey: true
         },
-      ]), */
+      ]), 
       
     });
     OpenSearchCollection.addDependency(OpenSearchSecurityPolicy);
