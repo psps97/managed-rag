@@ -184,13 +184,13 @@ export class CdkManagedRagStack extends cdk.Stack {
     // OpenSearch Serverless
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction`, {
       name: projectName,    
-      description: `opensearch correction for ${projectName}`,
+      description: `opensearch correction`,
       standbyReplicas: 'DISABLED',
       type: 'VECTORSEARCH',
     });
 
     const OpenSearchSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-security-policy`, {
-      name: `opensearch-security-policy-for-${projectName}`,
+      name: `opensearch-security-policy`,
       policy: `{
         "Rules":[
           {
@@ -206,7 +206,7 @@ export class CdkManagedRagStack extends cdk.Stack {
         "AWSOwnedKey":true
       }`,
       type: 'network',    
-      description: `opensearch security policy for ${projectName}`,
+      description: `opensearch security policy`,
     });
     OpenSearchCollection.addDependency(OpenSearchSecurityPolicy);
 
