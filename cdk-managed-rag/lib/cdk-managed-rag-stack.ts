@@ -189,12 +189,18 @@ export class CdkManagedRagStack extends cdk.Stack {
       type: 'VECTORSEARCH',
     });
 
+    const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy-for-${projectName}`, {
+      name: `opensearch-encription-security-policy`,
+      policy:
+        '{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',
+      type: "encryption",
+    });
+    OpenSearchCollection.addDependency(encPolicy);
+
     const OpenSearchSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-security-policy-for-${projectName}`, {
       name: `opensearch-security-policy`,
       type: 'network',    
       description: `opensearch security policy for ${projectName}`,
-      // policy:'{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',
-      
       policy: JSON.stringify([
         {
           Rules: [
