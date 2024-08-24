@@ -190,15 +190,15 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
 
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
-      name: `opensearch-encription-security-policy`,
-      policy:
-        '{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',
+      name: `encription-policy`,
       type: "encryption",
+      policy:
+        '{"Rules":[{"ResourceType":"collection","Resource":["collection/rag-collection"]}],"AWSOwnedKey":true}',      
     });
     OpenSearchCollection.addDependency(encPolicy);
 
     const natPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
-      name: `opensearch-network-security-policy`,
+      name: `network-policy`,
       type: 'network',    
       description: `opensearch security policy for ${projectName}`,
       policy: JSON.stringify([
