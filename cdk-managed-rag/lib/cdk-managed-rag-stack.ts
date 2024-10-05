@@ -320,7 +320,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
 
-    const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
+  /*  const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
       name: `knowledge-base-for-${projectName}`,
       description: `knowledge base for ${projectName}`,
       roleArn: knowledge_base_role.roleArn,
@@ -350,7 +350,7 @@ export class CdkManagedRagStack extends cdk.Stack {
           },          
         },
       },          
-    }); 
+    }); */
 
     
 
