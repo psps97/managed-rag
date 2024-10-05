@@ -997,51 +997,67 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
 from boto3 import Session
 #from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
 
-#from os import environ
-#region = environ.get('AWS_REGION', 'us-east-1')
+from os import environ
+region_name = environ.get('AWS_REGION', 'us-east-1')
 #service = environ.get('SERVICE', 'es')
 #credentials = Session().get_credentials()
 #auth = Urllib3AWSV4SignerAuth(credentials, region, service)
 
 session = boto3.Session()
-aoss_client = session.client(
-    service_name="opensearchserverless"
+
+credentials = session.get_credentials()
+
+from requests_aws4auth import AWS4Auth
+
+service = "aoss"  # must set the service as 'aoss'
+awsauth = AWS4Auth(
+    credentials.access_key,
+    credentials.secret_key,
+    region_name,
+    service,
+    session_token=credentials.token,
 )
-response = aoss_client.list_collections()
-print('response: ', response)
 
-for i, correction in enumerate(response["collectionSummaries"]):
-    print(correction)
-    
-    collection_name = correction[0]["name"]
-    collection_id = correction[0]["id"]
-
-    print(f'{i}: collection_name: {collection_name}')
-    print(f'{i}: collection_id: {collection_id}')
-
-#os_client = OpenSearch(
-#    hosts = [{
-#        'host': opensearch_url.replace("https://", ""), 
-#        'port': 443
-#    }],
-#    http_compress = True,
+os_client = OpenSearch(
+    hosts = [{
+        'host': opensearch_url.replace("https://", ""), 
+        'port': 443
+    }],
+    http_compress = True,
     # connection_class=RequestsHttpConnection,
     # http_auth=(opensearch_account, opensearch_passwd),
-    # http_auth=auth,
-#    timeout=300,
-#    use_ssl = True,
-#    verify_certs = True,
-#    ssl_assert_hostname = False,
-#    ssl_show_warn = False,
-#)
+    http_auth=awsauth,
+    timeout=300,
+    use_ssl = True,
+    verify_certs = True,
+    ssl_assert_hostname = False,
+    ssl_show_warn = False,
+)
 
 def is_not_exist(index_name):    
-    if aoss_client.indices.exists(index_name):        
-        print('use exist index: ', index_name)    
-        return False
-    else:
-        print('no index: ', index_name)
-        return True
+    print('index_name: ', index_name)
+    
+    aoss_client = session.client(
+        service_name="opensearchserverless"
+    )
+    response = aoss_client.list_collections()
+    print('response: ', response)
+
+    for i, correction in enumerate(response["collectionSummaries"]):
+        print('correction: ', correction)
+        
+        collection_name = correction["name"]
+        collection_id = correction["id"]
+
+        print(f'{i}: collection_name: {collection_name}')
+        print(f'{i}: collection_id: {collection_id}')
+        
+        if collection_name == index_name:
+            print('use exist index: ', index_name) 
+            return False
+    
+    print('no index: ', index_name)
+    return True
     
 def get_knowledge_base_id(knowledge_base_name):
     print('knowledge_base_name: ', knowledge_base_name)
