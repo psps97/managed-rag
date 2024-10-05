@@ -974,22 +974,4 @@ export class componentDeployment extends cdk.Stack {
       stageName: stage
     });   
   }
-} 
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
 }
