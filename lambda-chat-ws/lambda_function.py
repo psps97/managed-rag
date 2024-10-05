@@ -996,8 +996,20 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
 # get auth
 region = os.environ.get('AWS_REGION', 'us-east-1')
 service = "aoss"  
-credentials = boto3.Session().get_credentials()
-awsauth = AWSV4SignerAuth(credentials, region, service)
+#credentials = boto3.Session().get_credentials()
+#awsauth = AWSV4SignerAuth(credentials, region, service)
+
+session = boto3.Session()
+credentials = session.get_credentials()
+
+from requests_aws4auth import AWS4Auth
+awsauth = AWS4Auth(
+    credentials.access_key,
+    credentials.secret_key,
+    region,
+    service,
+    session_token=credentials.token,
+)
 
 os_client = OpenSearch(
     hosts = [{
