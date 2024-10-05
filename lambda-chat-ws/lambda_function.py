@@ -1116,8 +1116,9 @@ def get_knowledge_base_id(knowledge_base_name):
     # create opensearch index
     if(is_not_exist(vectorIndexName)):
         body={
-            "settings":{
-                "index.knn": True
+            'settings':{
+                'index.knn': True,
+                'knn.space_type': 'l2'  # 'cosinesimil'
             },
             'mappings': {
                 'properties': {
@@ -1137,7 +1138,6 @@ def get_knowledge_base_id(knowledge_base_name):
                     'vector_field': {
                         'type': 'knn_vector',
                         'dimension': 1024,
-                        "space_type": "l2", 
                         'method': {
                             "name": "hnsw",
                             "engine": "faiss",
