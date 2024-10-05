@@ -995,32 +995,48 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
 
 
 from boto3 import Session
-from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
+#from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
 
-from os import environ
-region = environ.get('AWS_REGION', 'us-east-1')
-service = environ.get('SERVICE', 'es')
-credentials = Session().get_credentials()
-auth = Urllib3AWSV4SignerAuth(credentials, region, service)
+#from os import environ
+#region = environ.get('AWS_REGION', 'us-east-1')
+#service = environ.get('SERVICE', 'es')
+#credentials = Session().get_credentials()
+#auth = Urllib3AWSV4SignerAuth(credentials, region, service)
 
-os_client = OpenSearch(
-    hosts = [{
-        'host': opensearch_url.replace("https://", ""), 
-        'port': 443
-    }],
-    http_compress = True,
+session = boto3.Session()
+aoss_client = session.client(
+    service_name="opensearchserverless"
+)
+response = aoss_client.list_collections()
+print('response: ', response)
+
+for i, correction in enumerate(response["collectionSummaries"]):
+    print(correction)
+    
+    collection_name = correction[0]["name"]
+    collection_id = correction[0]["id"]
+
+    print(f'{i}: collection_name: {collection_name}')
+    print(f'{i}: collection_id: {collection_id}')
+
+#os_client = OpenSearch(
+#    hosts = [{
+#        'host': opensearch_url.replace("https://", ""), 
+#        'port': 443
+#    }],
+#    http_compress = True,
     # connection_class=RequestsHttpConnection,
     # http_auth=(opensearch_account, opensearch_passwd),
     # http_auth=auth,
-    timeout=300,
-    use_ssl = True,
-    verify_certs = True,
-    ssl_assert_hostname = False,
-    ssl_show_warn = False,
-)
+#    timeout=300,
+#    use_ssl = True,
+#    verify_certs = True,
+#    ssl_assert_hostname = False,
+#    ssl_show_warn = False,
+#)
 
 def is_not_exist(index_name):    
-    if os_client.indices.exists(index_name):        
+    if aoss_client.indices.exists(index_name):        
         print('use exist index: ', index_name)    
         return False
     else:
@@ -1109,7 +1125,7 @@ def get_knowledge_base_id(knowledge_base_name):
         }
             
         try: # create index
-            response = os_client.indices.create(
+            response = aoss_client.indices.create(
                 vectorIndexName,
                 body=index_body
             )
@@ -1150,7 +1166,8 @@ def get_knowledge_base_id(knowledge_base_name):
     )        
     return knowledge_base_id
 
-knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
+knowledge_base_id = ""
+# knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     revised_question = text # use original question for test
