@@ -1043,7 +1043,31 @@ def is_not_exist(index_name):
     else:
         print('no index: ', index_name)
         return True
-    
+
+import boto3
+import botocore
+# Create a session with boto3
+session = boto3.Session()
+# Get the STS client
+sts_client = session.client("sts")
+# Get the caller identity
+caller_identity = sts_client.get_caller_identity()
+# Get the assumed role ARN
+assumed_role_arn = caller_identity["Arn"]
+# Get the role name from the assumed role ARN
+role_name = assumed_role_arn.split("/")[1]
+# Get the IAM client
+iam_client = session.client("iam")
+is_user = False
+# Get the role details
+try:
+    role = iam_client.get_role(RoleName=role_name)
+    iam_role_arn = role["Role"]["Arn"]
+    print(f"The IAM role assumed now is: {assumed_role_arn}")
+    print(f"The IAM role attached: {iam_role_arn}")
+except botocore.exceptions.ClientError as e:
+    print(f"Error: {e}")
+        
 def get_knowledge_base_id(knowledge_base_name):
     print('knowledge_base_name: ', knowledge_base_name)
     
@@ -1105,8 +1129,8 @@ def get_knowledge_base_id(knowledge_base_name):
                             'last_updated': {'type': 'date'},
                             'project': {'type': 'keyword'},
                             'seq_num': {'type': 'long'},
-                            'title': {'type': 'text'},  # For full-text search
-                            'url': {'type': 'text'},  # For full-text search
+                            'title': {'type': 'text'}, 
+                            'url': {'type': 'text'},  
                         }
                     },            
                     'text': {
@@ -1123,65 +1147,6 @@ def get_knowledge_base_id(knowledge_base_name):
                                 "m": 16
                             }
                         }                  
-                    }
-                }
-            }
-        }
-        index_body = {
-            'settings': {
-                'analysis': {
-                    'analyzer': {
-                        'my_analyzer': {
-                            'char_filter': ['html_strip'], 
-                            'tokenizer': 'nori',
-                            'filter': ['nori_number','lowercase','trim','my_nori_part_of_speech'],
-                            'type': 'custom'
-                        }
-                    },
-                    'tokenizer': {
-                        'nori': {
-                            'decompound_mode': 'mixed',
-                            'discard_punctuation': 'true',
-                            'type': 'nori_tokenizer'
-                        }
-                    },
-                    "filter": {
-                        "my_nori_part_of_speech": {
-                            "type": "nori_part_of_speech",
-                            "stoptags": [
-                                    "E", "IC", "J", "MAG", "MAJ",
-                                    "MM", "SP", "SSC", "SSO", "SC",
-                                    "SE", "XPN", "XSA", "XSN", "XSV",
-                                    "UNA", "NA", "VSV"
-                            ]
-                        }
-                    }
-                },
-                'index': {
-                    'knn': True,
-                    'knn.space_type': 'cosinesimil'  # Example space type
-                }
-            },
-            'mappings': {
-                'properties': {
-                    'metadata': {
-                        'properties': {
-                            'source' : {'type': 'keyword'},                    
-                            'last_updated': {'type': 'date'},
-                            'project': {'type': 'keyword'},
-                            'seq_num': {'type': 'long'},
-                            'title': {'type': 'text'},  # For full-text search
-                            'url': {'type': 'text'},  # For full-text search
-                        }
-                    },            
-                    'text': {
-                        'analyzer': 'my_analyzer',
-                        'search_analyzer': 'my_analyzer',
-                        'type': 'text'
-                    },
-                    'vector_field': {
-                        'type': 'knn_vector',
-                        'dimension': 1024
                     }
                 }
             }
