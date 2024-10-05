@@ -1014,7 +1014,31 @@ os_client = OpenSearch(
 )
 
 def is_not_exist(index_name):    
-    if os_client.indices.exists(index_name):        
+    print('index_name: ', index_name)
+    
+    #session = boto3.Session()
+    #aoss_client = session.client(
+    #    service_name="opensearchserverless"
+    #)
+    #response = aoss_client.list_collections()
+    #print('response: ', response)
+
+    #for i, correction in enumerate(response["collectionSummaries"]):
+    #    print('correction: ', correction)
+        
+    #    collection_name = correction["name"]
+    #    collection_id = correction["id"]
+
+    #    print(f'{i}: collection_name: {collection_name}')
+    #    print(f'{i}: collection_id: {collection_id}')
+        
+    #    if collection_name == index_name:
+    #        print('use exist index: ', index_name) 
+    #        return False
+    
+    #print('no index: ', index_name)
+    #return True
+    if os_client.indices.exists(index_name):
         print('use exist index: ', index_name)    
         return False
     else:
