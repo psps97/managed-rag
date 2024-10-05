@@ -1203,8 +1203,8 @@ def get_knowledge_base_id(knowledge_base_name):
                     'opensearchServerlessConfiguration': {
                         'collectionArn': collectionArn,
                         'fieldMapping': {
-                            'metadataField': 'metadata',
-                            'textField': 'text',
+                            'metadataField': 'AMAZON_BEDROCK_METADATA',
+                            'textField': 'AMAZON_BEDROCK_TEXT_CHUNK',
                             'vectorField': 'vector_field'
                         },
                         'vectorIndexName': vectorIndexName
