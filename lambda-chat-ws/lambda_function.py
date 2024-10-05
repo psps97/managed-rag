@@ -1141,7 +1141,7 @@ def get_knowledge_base_id(knowledge_base_name):
         }
             
         try: # create index
-            response = aoss_client.indices.create(
+            response = os_client.indices.create(
                 vectorIndexName,
                 body=index_body
             )
@@ -1182,7 +1182,6 @@ def get_knowledge_base_id(knowledge_base_name):
     )        
     return knowledge_base_id
 
-knowledge_base_id = ""
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
