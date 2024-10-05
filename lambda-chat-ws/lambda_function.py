@@ -999,17 +999,20 @@ service = "aoss"
 #credentials = boto3.Session().get_credentials()
 #awsauth = AWSV4SignerAuth(credentials, region, service)
 
-session = boto3.Session()
-credentials = session.get_credentials()
+#session = boto3.Session()
+#credentials = session.get_credentials()
 
-from requests_aws4auth import AWS4Auth
-awsauth = AWS4Auth(
-    credentials.access_key,
-    credentials.secret_key,
-    region,
-    service,
-    session_token=credentials.token,
-)
+#from requests_aws4auth import AWS4Auth
+#awsauth = AWS4Auth(
+#    credentials.access_key,
+#    credentials.secret_key,
+#    region,
+#    service,
+#    session_token=credentials.token,
+#)
+
+credentials = boto3.Session().get_credentials()
+awsauth = AWSV4SignerAuth(credentials, region, service)
 
 os_client = OpenSearch(
     hosts = [{
