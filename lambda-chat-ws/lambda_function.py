@@ -1011,17 +1011,17 @@ from requests_aws4auth import AWS4Auth
 
 service = "aoss"  # must set the service as 'aoss'
 
-#awsauth = AWS4Auth(
-#    credentials.access_key,
-#    credentials.secret_key,
-#    region,
-#    service,
-#    session_token=credentials.token,
-#)
+awsauth = AWS4Auth(
+    credentials.access_key,
+    credentials.secret_key,
+    region,
+    service,
+    session_token=credentials.token,
+)
 from opensearchpy import AWSV4SignerAuth
 
-credentials = boto3.Session().get_credentials()
-awsauth = AWSV4SignerAuth(credentials, region, service)
+#credentials = boto3.Session().get_credentials()
+#awsauth = AWSV4SignerAuth(credentials, region, service)
 
 os_client = OpenSearch(
     hosts = [{
@@ -1029,7 +1029,7 @@ os_client = OpenSearch(
         'port': 443
     }],
     http_compress = True,
-    # connection_class=RequestsHttpConnection,
+    connection_class=RequestsHttpConnection,
     # http_auth=(opensearch_account, opensearch_passwd),
     http_auth=awsauth,
     # timeout=300,
