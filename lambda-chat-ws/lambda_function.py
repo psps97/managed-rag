@@ -1010,14 +1010,18 @@ credentials = session.get_credentials()
 from requests_aws4auth import AWS4Auth
 
 service = "aoss"  # must set the service as 'aoss'
-awsauth = AWS4Auth(
-    credentials.access_key,
-    credentials.secret_key,
-    region,
-    service,
-    session_token=credentials.token,
-)
-print('awsauth: ', awsauth)
+
+#awsauth = AWS4Auth(
+#    credentials.access_key,
+#    credentials.secret_key,
+#    region,
+#    service,
+#    session_token=credentials.token,
+#)
+from opensearchpy import AWSV4SignerAuth
+
+credentials = boto3.Session().get_credentials()
+awsauth = AWSV4SignerAuth(credentials, region, service)
 
 os_client = OpenSearch(
     hosts = [{
