@@ -992,58 +992,11 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
         reference = reference + f"{i+1}. <a href={link} target=_blank>{name}</a>, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
                     
     return reference
-
-import boto3
-import botocore
-
-# Create a session with boto3
-session = boto3.Session()
-
-# Get the STS client
-sts_client = session.client("sts")
-
-# Get the caller identity
-caller_identity = sts_client.get_caller_identity()
-
-# Get the assumed role ARN
-assumed_role_arn = caller_identity["Arn"]
-
-# Get the role name from the assumed role ARN
-role_name = assumed_role_arn.split("/")[1]
-
-# Get the IAM client
-iam_client = session.client("iam")
-
-is_user = False
-
-# Get the role details
-try:
-    role = iam_client.get_role(RoleName=role_name)
-    iam_role_arn = role["Role"]["Arn"]
-
-    print(f"The IAM role assumed now is: {assumed_role_arn}")
-    print(f"The IAM role attached: {iam_role_arn}")
-except botocore.exceptions.ClientError as e:
-    print(f"Error: {e}")
     
 # get auth
 region = os.environ.get('AWS_REGION', 'us-west-2')
 print('region: ', region)
 service = "aoss"  
-#credentials = boto3.Session().get_credentials()
-#awsauth = AWSV4SignerAuth(credentials, region, service)
-
-#session = boto3.Session()
-#credentials = session.get_credentials()
-
-#from requests_aws4auth import AWS4Auth
-#awsauth = AWS4Auth(
-#    credentials.access_key,
-#    credentials.secret_key,
-#    region,
-#    service,
-#    session_token=credentials.token,
-#)
 
 credentials = boto3.Session().get_credentials()
 awsauth = AWSV4SignerAuth(credentials, region, service)
@@ -1053,13 +1006,10 @@ os_client = OpenSearch(
         'host': opensearch_url.replace("https://", ""), 
         'port': 443
     }],
-    #http_compress = True,
     http_auth=awsauth,
     use_ssl = True,
     verify_certs = True,
     connection_class=RequestsHttpConnection,
-    #ssl_assert_hostname = False,
-    #ssl_show_warn = False,
 )
 
 def is_not_exist(index_name):    
@@ -1215,7 +1165,7 @@ def get_knowledge_base_id(knowledge_base_name):
                 vectorIndexName,
                 body=body
             )
-            print('index was created with nori plugin:', response)
+            print('index was created:', response)
         except Exception:
             err_msg = traceback.format_exc()
             print('error message: ', err_msg)                
@@ -1225,10 +1175,12 @@ def get_knowledge_base_id(knowledge_base_name):
     print('knowledge_base_name: ', knowledge_base_name)
     print('collectionArn: ', collectionArn)
     print('vectorIndexName: ', vectorIndexName)
+    print('embeddingModelArn: ', embeddingModelArn)
+    print('knowledge_base_role: ', knowledge_base_role)
     
     response = client.create_knowledge_base(
         name=knowledge_base_name,
-        description='knowledge base named by '+knowledge_base_name,
+        description=f"Knowledge base named by ${knowledge_base_name}",
         roleArn=knowledge_base_role,
         knowledgeBaseConfiguration={
             'type': 'VECTOR',
@@ -1253,7 +1205,9 @@ def get_knowledge_base_id(knowledge_base_name):
                 'vectorIndexName': vectorIndexName
             }
         }                
-    )        
+    )   
+    print('response: ', response)
+         
     return knowledge_base_id
 
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
