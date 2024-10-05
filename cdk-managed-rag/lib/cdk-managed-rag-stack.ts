@@ -322,7 +322,7 @@ export class CdkManagedRagStack extends cdk.Stack {
           //  knowledge_base_role.roleArn,
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             //props.executorRole.roleArn,
-            //`arn:aws:iam::${accountId}:role/administration`,
+            `arn:aws:iam::${accountId}:role/administration`,
           ], 
         },
       ]),
