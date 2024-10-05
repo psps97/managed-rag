@@ -997,8 +997,9 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
 from boto3 import Session
 from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
 
-region = os.get('AWS_REGION', 'us-east-1')
-service = os.get('SERVICE', 'es')
+from os import environ
+region = environ.get('AWS_REGION', 'us-east-1')
+service = environ.get('SERVICE', 'es')
 credentials = Session().get_credentials()
 auth = Urllib3AWSV4SignerAuth(credentials, region, service)
 
