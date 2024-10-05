@@ -1119,14 +1119,24 @@ def get_knowledge_base_id(knowledge_base_name):
             "settings":{
                 "index.knn": True
             },
-            "mappings":{
-                "properties": {
-                    "values": {
-                        "type": "knn_vector",
-                        "dimension": 1024
+            'mappings': {
+                'properties': {
+                    'metadata': {
+                        'properties': {
+                            'source' : {'type': 'keyword'},                    
+                            'last_updated': {'type': 'date'},
+                            'project': {'type': 'keyword'},
+                            'seq_num': {'type': 'long'},
+                            'title': {'type': 'text'},  # For full-text search
+                            'url': {'type': 'text'},  # For full-text search
+                        }
+                    },            
+                    'text': {
+                        'type': 'text'
                     },
-                    "title": {
-                        "type": "text"
+                    'vector_field': {
+                        'type': 'knn_vector',
+                        'dimension': 1024
                     }
                 }
             }
