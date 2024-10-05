@@ -1135,9 +1135,17 @@ def get_knowledge_base_id(knowledge_base_name):
                         'type': 'text'
                     },
                     'vector_field': {
-                        'engine': "faiss",
                         'type': 'knn_vector',
-                        'dimension': 1024
+                        'dimension': 1024,
+                        "space_type": "l2", 
+                        'method': {
+                            "name": "hnsw",
+                            "engine": "faiss",
+                            "parameters": {
+                                "ef_construction": 512,
+                                "m": 16
+                            }
+                        }                  
                     }
                 }
             }
