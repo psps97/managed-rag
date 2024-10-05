@@ -993,8 +993,42 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
                     
     return reference
 
+import boto3
+import botocore
+
+# Create a session with boto3
+session = boto3.Session()
+
+# Get the STS client
+sts_client = session.client("sts")
+
+# Get the caller identity
+caller_identity = sts_client.get_caller_identity()
+
+# Get the assumed role ARN
+assumed_role_arn = caller_identity["Arn"]
+
+# Get the role name from the assumed role ARN
+role_name = assumed_role_arn.split("/")[1]
+
+# Get the IAM client
+iam_client = session.client("iam")
+
+is_user = False
+
+# Get the role details
+try:
+    role = iam_client.get_role(RoleName=role_name)
+    iam_role_arn = role["Role"]["Arn"]
+
+    print(f"The IAM role assumed now is: {assumed_role_arn}")
+    print(f"The IAM role attached: {iam_role_arn}")
+except botocore.exceptions.ClientError as e:
+    print(f"Error: {e}")
+    
 # get auth
 region = os.environ.get('AWS_REGION', 'us-west-2')
+print('region: ', region)
 service = "aoss"  
 #credentials = boto3.Session().get_credentials()
 #awsauth = AWSV4SignerAuth(credentials, region, service)
