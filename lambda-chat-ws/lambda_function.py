@@ -1194,7 +1194,7 @@ def get_knowledge_base_id(knowledge_base_name):
             }
         },
         storageConfiguration={
-            "type": 'OPENSEARCH_SERVERLESS',
+            'type': 'OPENSEARCH_SERVERLESS',
             'opensearchServerlessConfiguration': {
                 'collectionArn': collectionArn,
                 'fieldMapping': {
@@ -1213,8 +1213,6 @@ def get_knowledge_base_id(knowledge_base_name):
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
-    revised_question = text # use original question for test
- 
     msg = reference = ""
     relevant_docs = []
     if knowledge_base_id:    
@@ -1223,8 +1221,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
             retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 4}},
         )
         
-        relevant_docs = retriever.invoke(revised_question)
-        print(relevant_docs)
+        relevant_docs = retriever.invoke(text)
         
         #selected_relevant_docs = []
         #if len(relevant_docs)>=1:
