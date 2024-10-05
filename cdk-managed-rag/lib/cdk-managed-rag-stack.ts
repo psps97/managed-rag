@@ -322,44 +322,12 @@ export class CdkManagedRagStack extends cdk.Stack {
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             `arn:aws:iam::${accountId}:role/role-lambda-chat-ws-for-${projectName}-${region}`,
             //`arn:aws:iam::${accountId}:role/administration`,
-            `arn:aws:sts::${accountId}:assumed-role/administration/ksdyb-Isengard`,
+            //`arn:aws:sts::${accountId}:assumed-role/administration/ksdyb-Isengard`,
           ], 
         },
       ]),
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
-
-  /*  const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
-      name: `knowledge-base-for-${projectName}`,
-      description: `knowledge base for ${projectName}`,
-      roleArn: knowledge_base_role.roleArn,
-      knowledgeBaseConfiguration: {
-        type: 'VECTOR',
-        
-        vectorKnowledgeBaseConfiguration: {
-          embeddingModelArn: `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`,    
-          embeddingModelConfiguration: {
-            bedrockEmbeddingModelConfiguration: {
-              dimensions: 1024,
-            },
-          },
-        },
-      },
-      
-      storageConfiguration: {
-        type: 'OPENSEARCH_SERVERLESS',
-    
-        opensearchServerlessConfiguration: {
-          collectionArn: OpenSearchCollection.attrArn,
-          vectorIndexName: vectorIndexName,
-          fieldMapping: {            
-            textField: 'AMAZON_BEDROCK_TEXT_CHUNK',
-            vectorField: 'bedrock-knowledge-base-default-vector',
-            metadataField: 'AMAZON_BEDROCK_METADATA',
-          },          
-        },
-      },          
-    }); */
 
     // s3 
     const s3Bucket = new s3.Bucket(this, `storage-${projectName}`,{
