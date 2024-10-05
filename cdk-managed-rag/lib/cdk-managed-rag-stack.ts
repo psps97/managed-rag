@@ -787,6 +787,7 @@ export class CdkManagedRagStack extends cdk.Stack {
         knowledge_base_name: knowledge_base_name,
         knowledge_base_role: knowledge_base_role.roleArn,
         embeddingModelArn: embeddingModelArn,
+        collectionName: collectionName,
         collectionArn: collectionArn,
         vectorIndexName: vectorIndexName
       }
