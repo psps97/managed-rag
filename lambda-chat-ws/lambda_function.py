@@ -1016,6 +1016,7 @@ os_client = OpenSearch(
 def is_not_exist(index_name):    
     print('index_name: ', index_name)
     
+    session = boto3.Session()
     aoss_client = session.client(
         service_name="opensearchserverless"
     )
