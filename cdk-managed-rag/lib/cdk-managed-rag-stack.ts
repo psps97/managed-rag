@@ -321,8 +321,8 @@ export class CdkManagedRagStack extends cdk.Stack {
           Principal: [
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             `arn:aws:iam::${accountId}:role/role-lambda-chat-ws-for-${projectName}-${region}`,
-            // `arn:aws:iam::${accountId}:role/administration`,
-            `arn:aws:sts::${accountId}:assumed-role/administration/ksdyb-Isengard`,
+            `arn:aws:iam::${accountId}:role/administration`,
+            //`arn:aws:sts::${accountId}:assumed-role/administration/ksdyb-Isengard`,
           ], 
         },
       ]),
