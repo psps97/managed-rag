@@ -1127,7 +1127,6 @@ def get_knowledge_base_id(knowledge_base_name):
                     'vector_field': {
                         'type': 'knn_vector',
                         'dimension': 1024,
-                        'space_type': 'innerproduct',
                         'method': {
                             "name": "hnsw",
                             "engine": "faiss",
