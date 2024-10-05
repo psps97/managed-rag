@@ -290,7 +290,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     OpenSearchCollection.addDependency(netPolicy);
 
     const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
-      name: `data-collection-policy`,
+      name: `data-collection-policy-${projectName}`,
       type: "data",
       policy: JSON.stringify([
         {
