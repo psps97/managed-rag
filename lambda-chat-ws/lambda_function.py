@@ -994,7 +994,7 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
     return reference
 
 # get auth
-region = os.environ.get('AWS_REGION', 'us-east-1')
+region = os.environ.get('AWS_REGION', 'us-west-2')
 service = "aoss"  
 #credentials = boto3.Session().get_credentials()
 #awsauth = AWSV4SignerAuth(credentials, region, service)
