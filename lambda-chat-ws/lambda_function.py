@@ -1115,6 +1115,22 @@ def get_knowledge_base_id(knowledge_base_name):
         
     # create opensearch index
     if(is_not_exist(vectorIndexName)):
+        body={
+            "settings":{
+                "index.knn": True
+            },
+            "mappings":{
+                "properties": {
+                    "values": {
+                        "type": "knn_vector",
+                        "dimension": 1024
+                    },
+                    "title": {
+                        "type": "text"
+                    }
+                }
+            }
+        }
         index_body = {
             'settings': {
                 'analysis': {
@@ -1179,7 +1195,7 @@ def get_knowledge_base_id(knowledge_base_name):
         try: # create index
             response = os_client.indices.create(
                 vectorIndexName,
-                body=index_body
+                body=body
             )
             print('index was created with nori plugin:', response)
         except Exception:
