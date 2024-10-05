@@ -465,7 +465,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });        
 
     // pass role
-    const passRoleResourceArn = roleLambdaWebsocket.roleArn;
+    const passRoleResourceArn = knowledge_base_role.roleArn;
     const passRolePolicy = new iam.PolicyStatement({  
       resources: [passRoleResourceArn],      
       actions: ['iam:PassRole'],
