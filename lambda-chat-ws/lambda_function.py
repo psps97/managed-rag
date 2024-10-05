@@ -14,7 +14,6 @@ from io import BytesIO
 from urllib import parse
 from botocore.config import Config
 from PIL import Image
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
@@ -36,7 +35,8 @@ from langchain.agents import AgentExecutor, create_react_agent
 from bs4 import BeautifulSoup
 from pytz import timezone
 from langchain_community.tools.tavily_search import TavilySearchResults
-from opensearchpy import OpenSearch, RequestsHttpConnection
+from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+
 from langchain_aws import AmazonKnowledgeBasesRetriever
 
 s3 = boto3.client('s3')
@@ -993,33 +993,9 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
                     
     return reference
 
-
-from boto3 import Session
-#from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
-
-from os import environ
-region = environ.get('AWS_REGION', 'us-east-1')
-#service = environ.get('SERVICE', 'es')
-#credentials = Session().get_credentials()
-#auth = Urllib3AWSV4SignerAuth(credentials, region, service)
-
-session = boto3.Session()
-
-credentials = session.get_credentials()
-
-from requests_aws4auth import AWS4Auth
-
-service = "aoss"  # must set the service as 'aoss'
-
-#awsauth = AWS4Auth(
-#    credentials.access_key,
-#    credentials.secret_key,
-#    region,
-#    service,
-#    session_token=credentials.token,
-#)
-from opensearchpy import AWSV4SignerAuth
-
+# get auth
+region = os.environ.get('AWS_REGION', 'us-east-1')
+service = "aoss"  
 credentials = boto3.Session().get_credentials()
 awsauth = AWSV4SignerAuth(credentials, region, service)
 
@@ -1030,9 +1006,7 @@ os_client = OpenSearch(
     }],
     http_compress = True,
     connection_class=RequestsHttpConnection,
-    # http_auth=(opensearch_account, opensearch_passwd),
     http_auth=awsauth,
-    # timeout=300,
     use_ssl = True,
     verify_certs = True,
     ssl_assert_hostname = False,
