@@ -1213,7 +1213,7 @@ def get_knowledge_base_id(knowledge_base_name):
         try:
             response = client.create_knowledge_base(
                 name=knowledge_base_name,
-                description=f"Knowledge base named by ${knowledge_base_name}",
+                description=f"Knowledge base named by {knowledge_base_name}",
                 roleArn=knowledge_base_role,
                 knowledgeBaseConfiguration={
                     'type': 'VECTOR',
