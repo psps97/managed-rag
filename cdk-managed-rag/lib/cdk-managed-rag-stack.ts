@@ -492,6 +492,17 @@ export class CdkManagedRagStack extends cdk.Stack {
       }),
     ); 
 
+    // aoss
+    const getRolePolicy = new iam.PolicyStatement({  
+      resources: ['*'],      
+      actions: ['iam:GetRole'],
+    }); 
+    roleLambdaWebsocket.attachInlinePolicy( 
+      new iam.Policy(this, `getRole-policy-for-${projectName}`, {
+        statements: [getRolePolicy],
+      }),
+    ); 
+
     // api role
     const role = new iam.Role(this, `api-role-for-${projectName}`, {
       roleName: `api-role-for-${projectName}-${region}`,
