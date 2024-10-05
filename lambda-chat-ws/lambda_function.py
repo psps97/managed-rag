@@ -1117,8 +1117,7 @@ def get_knowledge_base_id(knowledge_base_name):
     if(is_not_exist(vectorIndexName)):
         body={
             'settings':{
-                'index.knn': True,
-                'knn.space_type': 'l2'  # 'cosinesimil'
+                "index.knn": True
             },
             'mappings': {
                 'properties': {
