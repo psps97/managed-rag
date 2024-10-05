@@ -1067,7 +1067,38 @@ def get_knowledge_base_id(knowledge_base_name):
     if(is_not_exist(vectorIndexName)):
         body={
             'settings':{
-                "index.knn": True
+                'analysis': {
+                    'analyzer': {
+                        'my_analyzer': {
+                            'char_filter': ['html_strip'], 
+                            'tokenizer': 'nori',
+                            'filter': ['nori_number','lowercase','trim','my_nori_part_of_speech'],
+                            'type': 'custom'
+                        }
+                    },
+                    'tokenizer': {
+                        'nori': {
+                            'decompound_mode': 'mixed',
+                            'discard_punctuation': 'true',
+                            'type': 'nori_tokenizer'
+                        }
+                    },
+                    "filter": {
+                        "my_nori_part_of_speech": {
+                            "type": "nori_part_of_speech",
+                            "stoptags": [
+                                    "E", "IC", "J", "MAG", "MAJ",
+                                    "MM", "SP", "SSC", "SSO", "SC",
+                                    "SE", "XPN", "XSA", "XSN", "XSV",
+                                    "UNA", "NA", "VSV"
+                            ]
+                        }
+                    }
+                },
+                'index': {
+                    'knn': True,
+                    'knn.space_type': 'cosinesimil'  # Example space type
+                }
             },
             'mappings': {
                 'properties': {
