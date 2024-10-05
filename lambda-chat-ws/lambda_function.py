@@ -1092,6 +1092,7 @@ def get_knowledge_base_id(knowledge_base_name):
         body={
             'settings':{
                 "index.knn": True,
+                "index.knn.algo_param.ef_search": 512,
                 'analysis': {
                     'analyzer': {
                         'my_analyzer': {
@@ -1123,22 +1124,10 @@ def get_knowledge_base_id(knowledge_base_name):
             },
             'mappings': {
                 'properties': {
-                    'metadata': {
-                        'properties': {
-                            'source' : {'type': 'keyword'},                    
-                            'last_updated': {'type': 'date'},
-                            'project': {'type': 'keyword'},
-                            'seq_num': {'type': 'long'},
-                            'title': {'type': 'text'}, 
-                            'url': {'type': 'text'},  
-                        }
-                    },            
-                    'text': {
-                        'type': 'text'
-                    },
                     'vector_field': {
                         'type': 'knn_vector',
                         'dimension': 1024,
+                        'space_type': 'innerproduct',
                         'method': {
                             "name": "hnsw",
                             "engine": "faiss",
@@ -1147,7 +1136,9 @@ def get_knowledge_base_id(knowledge_base_name):
                                 "m": 16
                             }
                         }                  
-                    }
+                    },
+                    "AMAZON_BEDROCK_METADATA": {"type": "text", "index": False},
+                    "AMAZON_BEDROCK_TEXT_CHUNK": {"type": "text"},
                 }
             }
         }
