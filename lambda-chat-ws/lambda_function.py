@@ -1135,6 +1135,7 @@ def get_knowledge_base_id(knowledge_base_name):
                         'type': 'text'
                     },
                     'vector_field': {
+                        'engine': "faiss",
                         'type': 'knn_vector',
                         'dimension': 1024
                     }
