@@ -1228,6 +1228,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         )
         
         relevant_docs = retriever.invoke(text)
+        print('relevant_docs: ', relevant_docs)
         
         #selected_relevant_docs = []
         #if len(relevant_docs)>=1:
@@ -1390,7 +1391,6 @@ def getResponse(connectionId, jsonBody):
                     
                 elif conv_type == 'qa-knowledge-base':   # RAG - Vector
                     print(f'rag_type: {rag_type}')
-                    search_type ='vector'
                     msg, reference = get_answer_using_knowledge_base(chat, text, connectionId, requestId)
                                     
                 # token counter
