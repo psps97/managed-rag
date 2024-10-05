@@ -245,6 +245,18 @@ export class CdkManagedRagStack extends cdk.Stack {
       }),
     );  
 
+    // pass role
+    const passRoleResourceArn = knowledge_base_role.roleArn;
+    const passRolePolicy = new iam.PolicyStatement({  
+      resources: [passRoleResourceArn],      
+      actions: ['iam:PassRole'],
+    });      
+    knowledge_base_role.attachInlinePolicy( // add pass role policy
+      new iam.Policy(this, `pass-role-for-${projectName}`, {
+      statements: [passRolePolicy],
+      }), 
+    );  
+
     // OpenSearch Serverless
     const collectionName = projectName
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
@@ -463,18 +475,6 @@ export class CdkManagedRagStack extends cdk.Stack {
         'execute-api:ManageConnections'
       ],
     });        
-
-    // pass role
-    const passRoleResourceArn = knowledge_base_role.roleArn;
-    const passRolePolicy = new iam.PolicyStatement({  
-      resources: [passRoleResourceArn],      
-      actions: ['iam:PassRole'],
-    });      
-    roleLambdaWebsocket.attachInlinePolicy( // add pass role policy
-      new iam.Policy(this, `pass-role-for-${projectName}`, {
-      statements: [passRolePolicy],
-      }), 
-    );  
 
     // api role
     const role = new iam.Role(this, `api-role-for-${projectName}`, {
