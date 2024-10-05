@@ -998,7 +998,7 @@ from boto3 import Session
 #from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
 
 from os import environ
-region_name = environ.get('AWS_REGION', 'us-east-1')
+region = environ.get('AWS_REGION', 'us-east-1')
 #service = environ.get('SERVICE', 'es')
 #credentials = Session().get_credentials()
 #auth = Urllib3AWSV4SignerAuth(credentials, region, service)
@@ -1013,10 +1013,11 @@ service = "aoss"  # must set the service as 'aoss'
 awsauth = AWS4Auth(
     credentials.access_key,
     credentials.secret_key,
-    region_name,
+    region,
     service,
     session_token=credentials.token,
 )
+print('awsauth: ', awsauth)
 
 os_client = OpenSearch(
     hosts = [{
