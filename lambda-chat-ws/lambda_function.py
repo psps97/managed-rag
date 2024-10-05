@@ -1004,13 +1004,13 @@ os_client = OpenSearch(
         'host': opensearch_url.replace("https://", ""), 
         'port': 443
     }],
-    http_compress = True,
-    connection_class=RequestsHttpConnection,
+    #http_compress = True,
     http_auth=awsauth,
     use_ssl = True,
     verify_certs = True,
-    ssl_assert_hostname = False,
-    ssl_show_warn = False,
+    connection_class=RequestsHttpConnection,
+    #ssl_assert_hostname = False,
+    #ssl_show_warn = False,
 )
 
 def is_not_exist(index_name):    
