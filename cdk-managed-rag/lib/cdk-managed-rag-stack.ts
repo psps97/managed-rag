@@ -262,7 +262,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
 
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
-      name: `encription-policy-${projectName}`,
+      name: `encription-policy`,
       type: "encryption",
       description: `opensearch encryption policy for ${projectName}`,
       policy:
@@ -271,7 +271,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     OpenSearchCollection.addDependency(encPolicy);
 
     const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
-      name: `network-policy-${projectName}`,
+      name: `network-policy`,
       type: 'network',    
       description: `opensearch network policy for ${projectName}`,
       policy: JSON.stringify([
@@ -321,6 +321,7 @@ export class CdkManagedRagStack extends cdk.Stack {
           Principal: [
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             `arn:aws:iam::${accountId}:role/role-lambda-chat-ws-for-${projectName}-${region}`,
+            //`arn:aws:iam::${accountId}:role/administration`,
             `arn:aws:sts::${accountId}:assumed-role/administration/ksdyb-Isengard`,
           ], 
         },
