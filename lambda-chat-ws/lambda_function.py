@@ -1168,7 +1168,7 @@ def get_knowledge_base_id(knowledge_base_name):
             print('index was created:', response)
 
             # delay 3seconds
-            time.sleep(3)
+            time.sleep(5)
         except Exception:
             err_msg = traceback.format_exc()
             print('error message: ', err_msg)                
@@ -1223,7 +1223,7 @@ def get_knowledge_base_id(knowledge_base_name):
         except Exception:
                 err_msg = traceback.format_exc()
                 print('error message: ', err_msg)
-                time.sleep(3)
+                time.sleep(5)
                 print(f"retrying... ({atempt})")
                 #raise Exception ("Not able to create the knowledge base")
             
