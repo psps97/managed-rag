@@ -1207,6 +1207,12 @@ def get_knowledge_base_id(knowledge_base_name):
         }                
     )   
     print('response: ', response)
+    
+    if 'knowledgeBaseId' in response['knowledgeBase']:
+        knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
+    else:
+        knowledge_base_id = ""    
+    print('knowledge_base_id: ', knowledge_base_id) 
          
     return knowledge_base_id
 
