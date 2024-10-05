@@ -1166,11 +1166,14 @@ def get_knowledge_base_id(knowledge_base_name):
                 body=body
             )
             print('index was created:', response)
+
+            # delay 3seconds
+            time.sleep(3)
         except Exception:
             err_msg = traceback.format_exc()
             print('error message: ', err_msg)                
             #raise Exception ("Not able to create the index")
-        
+            
     # create knowlege base
     print('knowledge_base_name: ', knowledge_base_name)
     print('collectionArn: ', collectionArn)
@@ -1178,42 +1181,52 @@ def get_knowledge_base_id(knowledge_base_name):
     print('embeddingModelArn: ', embeddingModelArn)
     print('knowledge_base_role: ', knowledge_base_role)
     
-    response = client.create_knowledge_base(
-        name=knowledge_base_name,
-        description=f"Knowledge base named by ${knowledge_base_name}",
-        roleArn=knowledge_base_role,
-        knowledgeBaseConfiguration={
-            'type': 'VECTOR',
-            'vectorKnowledgeBaseConfiguration': {
-                'embeddingModelArn': embeddingModelArn,
-                'embeddingModelConfiguration': {
-                    'bedrockEmbeddingModelConfiguration': {
-                        'dimensions': 1024
+    for atempt in range(3):
+        try:
+            response = client.create_knowledge_base(
+                name=knowledge_base_name,
+                description=f"Knowledge base named by ${knowledge_base_name}",
+                roleArn=knowledge_base_role,
+                knowledgeBaseConfiguration={
+                    'type': 'VECTOR',
+                    'vectorKnowledgeBaseConfiguration': {
+                        'embeddingModelArn': embeddingModelArn,
+                        'embeddingModelConfiguration': {
+                            'bedrockEmbeddingModelConfiguration': {
+                                'dimensions': 1024
+                            }
+                        }
                     }
-                }
-            }
-        },
-        storageConfiguration={
-            'type': 'OPENSEARCH_SERVERLESS',
-            'opensearchServerlessConfiguration': {
-                'collectionArn': collectionArn,
-                'fieldMapping': {
-                    'metadataField': 'metadata',
-                    'textField': 'text',
-                    'vectorField': 'vector_field'
                 },
-                'vectorIndexName': vectorIndexName
-            }
-        }                
-    )   
-    print('response: ', response)
-    
-    if 'knowledgeBaseId' in response['knowledgeBase']:
-        knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
-    else:
-        knowledge_base_id = ""    
-    print('knowledge_base_id: ', knowledge_base_id) 
-         
+                storageConfiguration={
+                    'type': 'OPENSEARCH_SERVERLESS',
+                    'opensearchServerlessConfiguration': {
+                        'collectionArn': collectionArn,
+                        'fieldMapping': {
+                            'metadataField': 'metadata',
+                            'textField': 'text',
+                            'vectorField': 'vector_field'
+                        },
+                        'vectorIndexName': vectorIndexName
+                    }
+                }                
+            )   
+            print('response: ', response)
+        
+            if 'knowledgeBaseId' in response['knowledgeBase']:
+                knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
+                break
+            else:
+                knowledge_base_id = ""    
+            print(f"successfully created: {knowledge_base_name}, {knowledge_base_id}")    
+            
+        except Exception:
+                err_msg = traceback.format_exc()
+                print('error message: ', err_msg)
+                time.sleep(3)
+                print(f"retrying... ({atempt})")
+                #raise Exception ("Not able to create the knowledge base")
+            
     return knowledge_base_id
 
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
