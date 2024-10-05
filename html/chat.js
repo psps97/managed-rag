@@ -307,16 +307,10 @@ function onSend(e) {
         let requestId = uuidv4();
         addSentMessage(requestId, timestr, message.value);
         
-        if(conversationType=='qa-opensearch-vector') {
+        if(conversationType=='qa-knowledge-base') {
             type = "text",
-            conv_type = 'qa-opensearch-vector',
-            rag_type = 'opensearch',
-            function_type = 'rag'
-        }
-        else if(conversationType=='qa-opensearch-hybrid') {
-            type = "text",
-            conv_type = 'qa-opensearch-hybrid',
-            rag_type = 'opensearch',
+            conv_type = 'qa-knowledge-base',
+            rag_type = 'knowledge-base',
             function_type = 'rag'
         }
         else {
@@ -651,21 +645,9 @@ attachFile.addEventListener('click', function(){
                             console.log(xmlHttp.responseText);
 
                             function_type = 'upload'
-                            if(conversationType=='qa-all') {
-                                conv_type = 'qa',
-                                rag_type = 'all'
-                            }
-                            else if(conversationType=='qa-opensearch-os') {
-                                conv_type = 'qa-opensearch-vector',
-                                rag_type = 'opensearch'
-                            }
-                            else if(conversationType=='qa-opensearch-hybrid') {
-                                conv_type = 'qa-opensearch-hybrid',
-                                rag_type = 'opensearch'
-                            }
-                            else if(conversationType=='qa-faiss') {
-                                conv_type = 'qa',
-                                rag_type = 'faiss'
+                            if(conversationType=='qa-knowledge-base') {
+                                conv_type = 'qa-knowledge-base',
+                                rag_type = 'knowledge-base'
                             }
                             else {
                                 conv_type = conversationType,

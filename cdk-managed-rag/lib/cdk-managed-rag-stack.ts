@@ -46,7 +46,7 @@ const enableHybridSearch = 'true';
 const enableParallelSummary = 'true';
 const enalbeParentDocumentRetrival = 'true';
 const speech_generation = 'false';
-
+const knowledge_base_name = ""
 const claude3_5_sonnet = [
   {
     "bedrock_region": "us-west-2", // Oregon
@@ -694,21 +694,6 @@ export class CdkManagedRagStack extends cdk.Stack {
       });
     }
 
-    const googleApiSecret = new secretsmanager.Secret(this, `google-api-secret-for-${projectName}`, {
-      description: 'secret for google api key',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      secretName: `googl_api_key-${projectName}`,
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({ 
-          google_cse_id: 'cse_id'
-        }),
-        generateStringKey: 'google_api_key',
-        excludeCharacters: '/@"',
-      },
-
-    });
-    googleApiSecret.grantRead(roleLambdaWebsocket) 
-
     const weatherApiSecret = new secretsmanager.Secret(this, `weather-api-secret-for-${projectName}`, {
       description: 'secret for weather api key', // openweathermap
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -766,11 +751,8 @@ export class CdkManagedRagStack extends cdk.Stack {
         LLM_for_multimodal: JSON.stringify(claude3_sonnet),          
         LLM_embedding: JSON.stringify(titan_embedding_v2),
         priorty_search_embedding: JSON.stringify(titan_embedding_v1),
-        googleApiSecret: googleApiSecret.secretName,
         projectName: projectName,
-        separated_chat_history: separated_chat_history,
-        enalbeParentDocumentRetrival: enalbeParentDocumentRetrival,
-        enableHybridSearch: enableHybridSearch
+        knowledge_base_name: knowledge_base_name
       }
     });     
     lambdaChatWebsocket.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  
