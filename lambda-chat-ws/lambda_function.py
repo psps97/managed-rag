@@ -36,7 +36,7 @@ from langchain.agents import AgentExecutor, create_react_agent
 from bs4 import BeautifulSoup
 from pytz import timezone
 from langchain_community.tools.tavily_search import TavilySearchResults
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, RequestsHttpConnection
 from langchain_aws import AmazonKnowledgeBasesRetriever
 
 s3 = boto3.client('s3')
@@ -44,8 +44,6 @@ s3_bucket = os.environ.get('s3_bucket') # bucket name
 s3_prefix = os.environ.get('s3_prefix')
 callLogTableName = os.environ.get('callLogTableName')
 
-opensearch_account = os.environ.get('opensearch_account')
-opensearch_passwd = os.environ.get('opensearch_passwd')
 enableReference = os.environ.get('enableReference', 'false')
 debugMessageMode = os.environ.get('debugMessageMode', 'false')
 opensearch_url = os.environ.get('opensearch_url')
@@ -57,6 +55,10 @@ LLM_for_multimodal= json.loads(os.environ.get('LLM_for_multimodal'))
 LLM_embedding = json.loads(os.environ.get('LLM_embedding'))
 priorty_search_embedding = json.loads(os.environ.get('priorty_search_embedding'))
 knowledge_base_name = os.environ.get('knowledge_base_name')
+knowledge_base_role = os.environ.get('knowledge_base_role')
+embeddingModelArn = os.environ.get('embeddingModelArn')
+collectionArn = os.environ.get('collectionArn')
+vectorIndexName = os.environ.get('vectorIndexName')
 
 selected_chat = 0
 selected_multimodal = 0
@@ -991,26 +993,167 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
                     
     return reference
 
-knowledge_base_id = None
+
+from boto3 import Session
+from opensearchpy import Urllib3AWSV4SignerAuth, OpenSearch, __versionstr__
+
+region = os.get('AWS_REGION', 'us-east-1')
+service = os.get('SERVICE', 'es')
+credentials = Session().get_credentials()
+auth = Urllib3AWSV4SignerAuth(credentials, region, service)
+
+os_client = OpenSearch(
+    hosts = [{
+        'host': opensearch_url.replace("https://", ""), 
+        'port': 443
+    }],
+    http_compress = True,
+    # connection_class=RequestsHttpConnection,
+    # http_auth=(opensearch_account, opensearch_passwd),
+    http_auth=auth,
+    timeout=300,
+    use_ssl = True,
+    verify_certs = True,
+    ssl_assert_hostname = False,
+    ssl_show_warn = False,
+)
+
+def is_not_exist(index_name):    
+    if os_client.indices.exists(index_name):        
+        print('use exist index: ', index_name)    
+        return False
+    else:
+        print('no index: ', index_name)
+        return True
+    
+def get_knowledge_base_id(knowledge_base_name):
+    print('knowledge_base_name: ', knowledge_base_name)
+    
+    client = boto3.client('bedrock-agent')         
+    response = client.list_knowledge_bases(
+        maxResults=10
+    )
+    print('response: ', response)
+                
+    if "knowledgeBaseSummaries" in response:
+        summaries = response["knowledgeBaseSummaries"]
+        for summary in summaries:
+            if summary["name"] == knowledge_base_name:
+                knowledge_base_id = summary["knowledgeBaseId"]
+                print('knowledge_base_id: ', knowledge_base_id)
+                return knowledge_base_id
+    else:
+        print('Not found knowledge_base_name: ', knowledge_base_name)
+        
+        # create opensearch index
+        if(is_not_exist(vectorIndexName)):
+            index_body = {
+                'settings': {
+                    'analysis': {
+                        'analyzer': {
+                            'my_analyzer': {
+                                'char_filter': ['html_strip'], 
+                                'tokenizer': 'nori',
+                                'filter': ['nori_number','lowercase','trim','my_nori_part_of_speech'],
+                                'type': 'custom'
+                            }
+                        },
+                        'tokenizer': {
+                            'nori': {
+                                'decompound_mode': 'mixed',
+                                'discard_punctuation': 'true',
+                                'type': 'nori_tokenizer'
+                            }
+                        },
+                        "filter": {
+                            "my_nori_part_of_speech": {
+                                "type": "nori_part_of_speech",
+                                "stoptags": [
+                                        "E", "IC", "J", "MAG", "MAJ",
+                                        "MM", "SP", "SSC", "SSO", "SC",
+                                        "SE", "XPN", "XSA", "XSN", "XSV",
+                                        "UNA", "NA", "VSV"
+                                ]
+                            }
+                        }
+                    },
+                    'index': {
+                        'knn': True,
+                        'knn.space_type': 'cosinesimil'  # Example space type
+                    }
+                },
+                'mappings': {
+                    'properties': {
+                        'metadata': {
+                            'properties': {
+                                'source' : {'type': 'keyword'},                    
+                                'last_updated': {'type': 'date'},
+                                'project': {'type': 'keyword'},
+                                'seq_num': {'type': 'long'},
+                                'title': {'type': 'text'},  # For full-text search
+                                'url': {'type': 'text'},  # For full-text search
+                            }
+                        },            
+                        'text': {
+                            'analyzer': 'my_analyzer',
+                            'search_analyzer': 'my_analyzer',
+                            'type': 'text'
+                        },
+                        'vector_field': {
+                            'type': 'knn_vector',
+                            'dimension': 1024
+                        }
+                    }
+                }
+            }
+            
+            try: # create index
+                response = os_client.indices.create(
+                    vectorIndexName,
+                    body=index_body
+                )
+                print('index was created with nori plugin:', response)
+            except Exception:
+                err_msg = traceback.format_exc()
+                print('error message: ', err_msg)                
+                #raise Exception ("Not able to create the index")
+        
+        # create knowlege base
+        response = client.create_knowledge_base(
+            name=knowledge_base_name,
+            description='knowledge base named by '+knowledge_base_name,
+            roleArn=knowledge_base_role,
+            knowledgeBaseConfiguration={
+                'type': 'VECTOR',
+                'vectorKnowledgeBaseConfiguration': {
+                    'embeddingModelArn': embeddingModelArn,
+                    'embeddingModelConfiguration': {
+                        'bedrockEmbeddingModelConfiguration': {
+                            'dimensions': 1024
+                        }
+                    }
+                }
+            },
+            storageConfiguration={
+                "type": 'OPENSEARCH_SERVERLESS',
+                'opensearchServerlessConfiguration': {
+                    'collectionArn': collectionArn,
+                    'fieldMapping': {
+                        'metadataField': 'metadata',
+                        'textField': 'text',
+                        'vectorField': 'vector_field'
+                    },
+                    'vectorIndexName': vectorIndexName
+                }
+            }                
+        )        
+        return knowledge_base_id
+
+knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
+                
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     revised_question = text # use original question for test
  
-    global knowledge_base_id
-    if not knowledge_base_id:        
-        client = boto3.client('bedrock-agent')         
-        response = client.list_knowledge_bases(
-            maxResults=10
-        )
-        print('response: ', response)
-                
-        if "knowledgeBaseSummaries" in response:
-            summaries = response["knowledgeBaseSummaries"]
-            for summary in summaries:
-                if summary["name"] == knowledge_base_name:
-                    knowledge_base_id = summary["knowledgeBaseId"]
-                    print('knowledge_base_id: ', knowledge_base_id)
-                    break
-    
     msg = reference = ""
     relevant_docs = []
     if knowledge_base_id:    

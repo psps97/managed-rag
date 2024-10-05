@@ -46,7 +46,9 @@ const enableHybridSearch = 'true';
 const enableParallelSummary = 'true';
 const enalbeParentDocumentRetrival = 'true';
 const speech_generation = 'false';
-const knowledge_base_name = ""
+const knowledge_base_name = `knowledge-base-for-${projectName}-${region}`
+const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
+
 const claude3_5_sonnet = [
   {
     "bedrock_region": "us-west-2", // Oregon
@@ -174,7 +176,7 @@ const titan_embedding_v2 = [  // dimension = 1024
 const LLM_for_chat = claude3_sonnet;
 const LLM_for_multimodal = claude3_sonnet;
 const LLM_embedding = titan_embedding_v2;
-const vectorIndexName = "bedrock-knowledge-base-default-index"
+const vectorIndexName = `knowledge-base-index-for-${projectName}`
 
 export class CdkManagedRagStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -250,6 +252,13 @@ export class CdkManagedRagStack extends cdk.Stack {
       description: `opensearch correction for ${projectName}`,
       standbyReplicas: 'DISABLED',
       type: 'VECTORSEARCH',
+    });
+    const collectionArn = OpenSearchCollection.attrArn
+    const opensearch_url = OpenSearchCollection.attrCollectionEndpoint
+
+    new cdk.CfnOutput(this, 'OpensearchCollectionEndpoint', {
+      value: opensearch_url,
+      description: 'The endpoint of opensearch correction',
     });
 
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
@@ -752,7 +761,11 @@ export class CdkManagedRagStack extends cdk.Stack {
         LLM_embedding: JSON.stringify(titan_embedding_v2),
         priorty_search_embedding: JSON.stringify(titan_embedding_v1),
         projectName: projectName,
-        knowledge_base_name: knowledge_base_name
+        knowledge_base_name: knowledge_base_name,
+        knowledge_base_role: knowledge_base_role.roleArn,
+        embeddingModelArn: embeddingModelArn,
+        collectionArn: collectionArn,
+        vectorIndexName: vectorIndexName
       }
     });     
     lambdaChatWebsocket.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));  
