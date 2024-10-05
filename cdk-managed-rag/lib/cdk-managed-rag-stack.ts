@@ -463,10 +463,17 @@ export class CdkManagedRagStack extends cdk.Stack {
         'execute-api:ManageConnections'
       ],
     });        
-    roleLambdaWebsocket.attachInlinePolicy( 
-      new iam.Policy(this, `api-invoke-policy-for-${projectName}`, {
-        statements: [apiInvokePolicy],
-      }),
+
+    // pass role
+    const passRoleResourceArn = roleLambdaWebsocket.roleArn;
+    const passRolePolicy = new iam.PolicyStatement({  
+      resources: [passRoleResourceArn],      
+      actions: ['iam:PassRole'],
+    });      
+    roleLambdaWebsocket.attachInlinePolicy( // add pass role policy
+      new iam.Policy(this, `pass-role-for-${projectName}`, {
+      statements: [passRolePolicy],
+      }), 
     );  
 
     // api role
