@@ -30,8 +30,6 @@ const bucketName = `storage-for-${projectName}-${accountId}-${region}`;
 let kendra_region = process.env.CDK_DEFAULT_REGION;   //  "us-west-2"
 const rag_method = 'RetrievalPrompt'; // RetrievalPrompt, RetrievalQA, ConversationalRetrievalChain
 
-const opensearch_account = "admin";
-const opensearch_passwd = "Wifi1234!";
 const enableReference = 'true';
 let opensearch_url = "";
 const debugMessageMode = 'false'; // if true, debug messages will be delivered to the client.
@@ -183,7 +181,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     super(scope, id, props);
 
     // Knowledge Base Role
-    /* const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
+    const knowledge_base_role = new iam.Role(this,  `role-knowledge-base-for-${projectName}`, {
       roleName: `role-knowledge-base-for-${projectName}-${region}`,
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal("bedrock.amazonaws.com")
@@ -315,14 +313,12 @@ export class CdkManagedRagStack extends cdk.Stack {
           //  knowledge_base_role.roleArn,
             `arn:aws:iam::${accountId}:role/${knowledge_base_role.roleName}`,
             //props.executorRole.roleArn,
-            `arn:aws:iam::${accountId}:role/administration`,            
+            //`arn:aws:iam::${accountId}:role/administration`,
           ], 
         },
       ]),
     });
     OpenSearchCollection.addDependency(dataAccessPolicy);
-
-
 
     const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(this, `knowledge-base-for-${projectName}`, {
       name: `knowledge-base-for-${projectName}`,
@@ -354,7 +350,7 @@ export class CdkManagedRagStack extends cdk.Stack {
           },          
         },
       },          
-    }); */
+    }); 
 
     
 
