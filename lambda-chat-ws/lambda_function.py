@@ -1043,112 +1043,112 @@ def get_knowledge_base_id(knowledge_base_name):
                 knowledge_base_id = summary["knowledgeBaseId"]
                 print('knowledge_base_id: ', knowledge_base_id)
                 return knowledge_base_id
-    else:
-        print('Not found knowledge_base_name: ', knowledge_base_name)
+    
+    print('Not found knowledge_base_name: ', knowledge_base_name)
         
-        # create opensearch index
-        if(is_not_exist(vectorIndexName)):
-            index_body = {
-                'settings': {
-                    'analysis': {
-                        'analyzer': {
-                            'my_analyzer': {
-                                'char_filter': ['html_strip'], 
-                                'tokenizer': 'nori',
-                                'filter': ['nori_number','lowercase','trim','my_nori_part_of_speech'],
-                                'type': 'custom'
-                            }
-                        },
-                        'tokenizer': {
-                            'nori': {
-                                'decompound_mode': 'mixed',
-                                'discard_punctuation': 'true',
-                                'type': 'nori_tokenizer'
-                            }
-                        },
-                        "filter": {
-                            "my_nori_part_of_speech": {
-                                "type": "nori_part_of_speech",
-                                "stoptags": [
-                                        "E", "IC", "J", "MAG", "MAJ",
-                                        "MM", "SP", "SSC", "SSO", "SC",
-                                        "SE", "XPN", "XSA", "XSN", "XSV",
-                                        "UNA", "NA", "VSV"
-                                ]
-                            }
+    # create opensearch index
+    if(is_not_exist(vectorIndexName)):
+        index_body = {
+            'settings': {
+                'analysis': {
+                    'analyzer': {
+                        'my_analyzer': {
+                            'char_filter': ['html_strip'], 
+                            'tokenizer': 'nori',
+                            'filter': ['nori_number','lowercase','trim','my_nori_part_of_speech'],
+                            'type': 'custom'
                         }
                     },
-                    'index': {
-                        'knn': True,
-                        'knn.space_type': 'cosinesimil'  # Example space type
+                    'tokenizer': {
+                        'nori': {
+                            'decompound_mode': 'mixed',
+                            'discard_punctuation': 'true',
+                            'type': 'nori_tokenizer'
+                        }
+                    },
+                    "filter": {
+                        "my_nori_part_of_speech": {
+                            "type": "nori_part_of_speech",
+                            "stoptags": [
+                                    "E", "IC", "J", "MAG", "MAJ",
+                                    "MM", "SP", "SSC", "SSO", "SC",
+                                    "SE", "XPN", "XSA", "XSN", "XSV",
+                                    "UNA", "NA", "VSV"
+                            ]
+                        }
                     }
                 },
-                'mappings': {
-                    'properties': {
-                        'metadata': {
-                            'properties': {
-                                'source' : {'type': 'keyword'},                    
-                                'last_updated': {'type': 'date'},
-                                'project': {'type': 'keyword'},
-                                'seq_num': {'type': 'long'},
-                                'title': {'type': 'text'},  # For full-text search
-                                'url': {'type': 'text'},  # For full-text search
-                            }
-                        },            
-                        'text': {
-                            'analyzer': 'my_analyzer',
-                            'search_analyzer': 'my_analyzer',
-                            'type': 'text'
-                        },
-                        'vector_field': {
-                            'type': 'knn_vector',
-                            'dimension': 1024
+                'index': {
+                    'knn': True,
+                    'knn.space_type': 'cosinesimil'  # Example space type
+                }
+            },
+            'mappings': {
+                'properties': {
+                    'metadata': {
+                        'properties': {
+                            'source' : {'type': 'keyword'},                    
+                            'last_updated': {'type': 'date'},
+                            'project': {'type': 'keyword'},
+                            'seq_num': {'type': 'long'},
+                            'title': {'type': 'text'},  # For full-text search
+                            'url': {'type': 'text'},  # For full-text search
                         }
+                    },            
+                    'text': {
+                        'analyzer': 'my_analyzer',
+                        'search_analyzer': 'my_analyzer',
+                        'type': 'text'
+                    },
+                    'vector_field': {
+                        'type': 'knn_vector',
+                        'dimension': 1024
                     }
                 }
             }
+        }
             
-            try: # create index
-                response = os_client.indices.create(
-                    vectorIndexName,
-                    body=index_body
-                )
-                print('index was created with nori plugin:', response)
-            except Exception:
-                err_msg = traceback.format_exc()
-                print('error message: ', err_msg)                
-                #raise Exception ("Not able to create the index")
+        try: # create index
+            response = os_client.indices.create(
+                vectorIndexName,
+                body=index_body
+            )
+            print('index was created with nori plugin:', response)
+        except Exception:
+            err_msg = traceback.format_exc()
+            print('error message: ', err_msg)                
+            #raise Exception ("Not able to create the index")
         
-        # create knowlege base
-        response = client.create_knowledge_base(
-            name=knowledge_base_name,
-            description='knowledge base named by '+knowledge_base_name,
-            roleArn=knowledge_base_role,
-            knowledgeBaseConfiguration={
-                'type': 'VECTOR',
-                'vectorKnowledgeBaseConfiguration': {
-                    'embeddingModelArn': embeddingModelArn,
-                    'embeddingModelConfiguration': {
-                        'bedrockEmbeddingModelConfiguration': {
-                            'dimensions': 1024
-                        }
+    # create knowlege base
+    response = client.create_knowledge_base(
+        name=knowledge_base_name,
+        description='knowledge base named by '+knowledge_base_name,
+        roleArn=knowledge_base_role,
+        knowledgeBaseConfiguration={
+            'type': 'VECTOR',
+            'vectorKnowledgeBaseConfiguration': {
+                'embeddingModelArn': embeddingModelArn,
+                'embeddingModelConfiguration': {
+                    'bedrockEmbeddingModelConfiguration': {
+                        'dimensions': 1024
                     }
                 }
-            },
-            storageConfiguration={
-                "type": 'OPENSEARCH_SERVERLESS',
-                'opensearchServerlessConfiguration': {
-                    'collectionArn': collectionArn,
-                    'fieldMapping': {
-                        'metadataField': 'metadata',
-                        'textField': 'text',
-                        'vectorField': 'vector_field'
-                    },
-                    'vectorIndexName': vectorIndexName
-                }
-            }                
-        )        
-        return knowledge_base_id
+            }
+        },
+        storageConfiguration={
+            "type": 'OPENSEARCH_SERVERLESS',
+            'opensearchServerlessConfiguration': {
+                'collectionArn': collectionArn,
+                'fieldMapping': {
+                    'metadataField': 'metadata',
+                    'textField': 'text',
+                    'vectorField': 'vector_field'
+                },
+                'vectorIndexName': vectorIndexName
+            }
+        }                
+    )        
+    return knowledge_base_id
 
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
                 
