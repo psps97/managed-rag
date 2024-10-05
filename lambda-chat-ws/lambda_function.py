@@ -1097,7 +1097,6 @@ def get_knowledge_base_id(knowledge_base_name):
                 },
                 'index': {
                     'knn': True,
-                    'knn.space_type': 'cosinesimil'  # Example space type
                 }
             },
             'mappings': {
