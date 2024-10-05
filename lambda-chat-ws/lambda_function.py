@@ -1204,6 +1204,10 @@ def get_knowledge_base_id(knowledge_base_name):
             #raise Exception ("Not able to create the index")
         
     # create knowlege base
+    print('knowledge_base_name: ', knowledge_base_name)
+    print('collectionArn: ', collectionArn)
+    print('vectorIndexName: ', vectorIndexName)
+    
     response = client.create_knowledge_base(
         name=knowledge_base_name,
         description='knowledge base named by '+knowledge_base_name,
