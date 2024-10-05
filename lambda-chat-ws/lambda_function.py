@@ -1165,6 +1165,7 @@ def get_knowledge_base_id(knowledge_base_name):
     print('embeddingModelArn: ', embeddingModelArn)
     print('knowledge_base_role: ', knowledge_base_role)
     
+    knowledge_base_id = ""
     for atempt in range(3):
         try:
             response = client.create_knowledge_base(
