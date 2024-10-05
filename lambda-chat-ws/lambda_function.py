@@ -1183,7 +1183,7 @@ def get_knowledge_base_id(knowledge_base_name):
     return knowledge_base_id
 
 knowledge_base_id = ""
-# knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
+knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     revised_question = text # use original question for test
