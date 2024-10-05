@@ -1245,7 +1245,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         
     print('relevant_context: ', relevant_context)
 
-    msg = query_using_RAG_context(connectionId, requestId, chat, relevant_context, revised_question)
+    msg = query_using_RAG_context(connectionId, requestId, chat, relevant_context, text)
     
     if len(relevant_docs):
         reference = get_reference_of_knoweledge_base(relevant_docs, path, doc_prefix)  
