@@ -1285,7 +1285,7 @@ def lexical_search(query, top_k):
 
     response = os_client.search(
         body=query,
-        index=vectorIndexName   # "idx-*"  (all)
+        index="*"   # "idx-*"  (all)
     )
     print('lexical query result: ', json.dumps(response))
         
