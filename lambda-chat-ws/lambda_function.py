@@ -1411,9 +1411,9 @@ def grade_documents(question, documents):
         # Score each doc    
         chat = get_chat()
         retrieval_grader = get_retrieval_grader(chat)
-        for doc in documents:
+        for i, doc in enumerate(documents):
             # print('doc: ', doc)
-            print_doc(doc)
+            print_doc(i, doc)
             
             score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
             print("score: ", score)
