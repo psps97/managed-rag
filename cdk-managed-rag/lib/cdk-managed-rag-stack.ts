@@ -781,6 +781,7 @@ export class CdkManagedRagStack extends cdk.Stack {
       environment: {
         s3_bucket: s3Bucket.bucketName,
         s3_prefix: s3_prefix,
+        s3_arn: s3Bucket.bucketArn,
         callLogTableName: callLogTableName,
         connection_url: connection_url,
         enableReference: enableReference,
