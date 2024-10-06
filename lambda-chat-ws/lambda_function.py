@@ -1196,7 +1196,7 @@ def get_knowledge_base_id(knowledge_base_name):
                     }
                 }                
             )   
-            print('response: ', response)
+            print('(create_knowledge_base) response: ', response)
         
             if 'knowledgeBaseId' in response['knowledgeBase']:
                 knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
@@ -1247,7 +1247,7 @@ def get_knowledge_base_id(knowledge_base_name):
                             }
                         }
                     )
-                    print('response: ', response)
+                    print('(create_data_source) response: ', response)
                     break
                 except Exception:
                     err_msg = traceback.format_exc()
