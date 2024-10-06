@@ -1249,7 +1249,7 @@ def initiate_knowledge_base():
                 dataSourceConfiguration={
                     's3Configuration': {
                         'bucketArn': s3_arn,
-                        'inclusionPrefixes': [
+                        'inclusionPrefixes': [ 
                             'doc',
                         ]
                     },

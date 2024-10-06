@@ -203,8 +203,7 @@ export class CdkManagedRagStack extends cdk.Stack {
       actions: [
         "bedrock:InvokeModel", 
         "bedrock:InvokeModelEndpoint", 
-        "bedrock:InvokeModelEndpointAsync",
-        "bedrock:CreateDataSource"
+        "bedrock:InvokeModelEndpointAsync",        
       ],
     });        
     knowledge_base_role.attachInlinePolicy( 
