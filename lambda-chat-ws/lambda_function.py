@@ -58,6 +58,7 @@ priorty_search_embedding = json.loads(os.environ.get('priorty_search_embedding')
 knowledge_base_name = os.environ.get('knowledge_base_name')
 knowledge_base_role = os.environ.get('knowledge_base_role')
 embeddingModelArn = os.environ.get('embeddingModelArn')
+parsingModelArn = os.environ.get('parsingModelArn')
 collectionArn = os.environ.get('collectionArn')
 vectorIndexName = os.environ.get('vectorIndexName')
 
@@ -1076,6 +1077,7 @@ def initiate_knowledge_base():
     global knowledge_base_id, data_source_id
     #########################
     # opensearch index
+    #########################
     if(is_not_exist(vectorIndexName)):
         body={
             'settings':{
@@ -1145,16 +1147,14 @@ def initiate_knowledge_base():
             print('error message: ', err_msg)                
             #raise Exception ("Not able to create the index")
             
-    # create knowlege base
+    #########################
+    # knowledge base
+    #########################
     print('knowledge_base_name: ', knowledge_base_name)
     print('collectionArn: ', collectionArn)
     print('vectorIndexName: ', vectorIndexName)
     print('embeddingModelArn: ', embeddingModelArn)
     print('knowledge_base_role: ', knowledge_base_role)
-    
-    #########################
-    # knowledge base
-    print('knowledge_base_name: ', knowledge_base_name)    
     try: 
         client = boto3.client('bedrock-agent')         
         response = client.list_knowledge_bases(
@@ -1173,9 +1173,7 @@ def initiate_knowledge_base():
         print('error message: ', err_msg)
                     
     if not knowledge_base_id:
-        print('Not found knowledge_base_name: ', knowledge_base_name)    
-    
-        knowledge_base_id = ""    
+        print('creating knowledge base.....')        
         for atempt in range(3):
             try:
                 response = client.create_knowledge_base(
@@ -1224,12 +1222,15 @@ def initiate_knowledge_base():
     
     #########################
     # data source      
+    #########################
     data_source_name = s3_bucket  
     try: 
         response = client.list_data_sources(
             knowledgeBaseId=knowledge_base_id,
             maxResults=10
         )        
+        print('(list_data_sources) response: ', response)
+        
         if 'dataSourceSummaries' in response:
             for data_source in response['dataSourceSummaries']:
                 print('data_source: ', data_source)
@@ -1271,16 +1272,39 @@ def initiate_knowledge_base():
                             ],
                             'overlapTokens': 60
                         }
+                    },
+                    'parsingConfiguration': {
+                        'bedrockFoundationModelConfiguration': {
+                            'modelArn': parsingModelArn
+                        }
                     }
                 }
             )
             print('(create_data_source) response: ', response)
+            
+            if 'dataSource' in response:
+                if 'dataSourceId' in response['dataSource']:
+                    data_source_id = response['dataSource']['dataSourceId']
+                    print('data_source_id: ', data_source_id)
+                    
         except Exception:
             err_msg = traceback.format_exc()
             print('error message: ', err_msg)
             #raise Exception ("Not able to create the data source")
     
     print(f"data_source_name: {data_source_name}, data_source_id: {data_source_id}")
+    
+    # trigger sync of data source
+    if knowledge_base_id and data_source_id:
+        try:
+            client = boto3.client('bedrock-agent')
+            response = client.start_ingestion_job(
+                knowledgeBaseId=knowledge_base_id,
+                dataSourceId=data_source_id
+            )
+        except Exception:
+            err_msg = traceback.format_exc()
+            print('error message: ', err_msg)
         
 initiate_knowledge_base()
                 

@@ -47,6 +47,7 @@ const enableParallelSummary = 'true';
 const enalbeParentDocumentRetrival = 'true';
 const speech_generation = 'false';
 const knowledge_base_name = `knowledge-base-for-${projectName}-${region}`
+const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`
 const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
 
 const claude3_5_sonnet = [
@@ -798,6 +799,7 @@ export class CdkManagedRagStack extends cdk.Stack {
         projectName: projectName,
         knowledge_base_name: knowledge_base_name,
         knowledge_base_role: knowledge_base_role.roleArn,
+        parsingModelArn: parsingModelArn,
         embeddingModelArn: embeddingModelArn,
         collectionName: collectionName,
         collectionArn: collectionArn,
