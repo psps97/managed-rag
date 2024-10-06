@@ -973,7 +973,6 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
         
         score = document.metadata["score"]
         print('score:', score)
-        doc_prefix = "knowledge-base"
         
         link = ""
         if "s3Location" in document.metadata["location"]:
@@ -990,9 +989,10 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
             link = document.metadata["location"]["webLocation"]["url"] if document.metadata["location"]["webLocation"]["url"] is not None else ""
             name = "WWW"
 
-        print('link:', link)
+        url = link
+        print('url:', url)
                     
-        reference = reference + f"{i+1}. <a href={link} target=_blank>{name}</a>, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
+        reference = reference + f"{i+1}. <a href={url} target=_blank>{name}</a>, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
                     
     return reference
     
@@ -1295,21 +1295,7 @@ def initiate_knowledge_base():
             #raise Exception ("Not able to create the data source")
     
     print(f"data_source_name: {data_source_name}, data_source_id: {data_source_id}")
-    
-    # trigger sync of data source
-    if knowledge_base_id and data_source_id:
-        try:
-            print('syncing data source...')  
-            client = boto3.client('bedrock-agent')
-            response = client.start_ingestion_job(
-                knowledgeBaseId=knowledge_base_id,
-                dataSourceId=data_source_id
-            )
-            print('(start_ingestion_job) response: ', response)
-        except Exception:
-            err_msg = traceback.format_exc()
-            print('error message: ', err_msg)
-        
+            
 initiate_knowledge_base()
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
