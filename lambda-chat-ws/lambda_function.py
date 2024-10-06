@@ -1024,52 +1024,13 @@ def is_not_exist(index_name):
     #)
     #response = aoss_client.list_collections()
     #print('response: ', response)
-
-    #for i, correction in enumerate(response["collectionSummaries"]):
-    #    print('correction: ', correction)
-        
-    #    collection_name = correction["name"]
-    #    collection_id = correction["id"]
-
-    #    print(f'{i}: collection_name: {collection_name}')
-    #    print(f'{i}: collection_id: {collection_id}')
-        
-    #    if collection_name == index_name:
-    #        print('use exist index: ', index_name) 
-    #        return False
     
-    #print('no index: ', index_name)
-    #return True
     if os_client.indices.exists(index_name):
         print('use exist index: ', index_name)    
         return False
     else:
         print('no index: ', index_name)
         return True
-
-import boto3
-import botocore
-# Create a session with boto3
-session = boto3.Session()
-# Get the STS client
-sts_client = session.client("sts")
-# Get the caller identity
-caller_identity = sts_client.get_caller_identity()
-# Get the assumed role ARN
-assumed_role_arn = caller_identity["Arn"]
-# Get the role name from the assumed role ARN
-role_name = assumed_role_arn.split("/")[1]
-# Get the IAM client
-iam_client = session.client("iam")
-is_user = False
-# Get the role details
-try:
-    role = iam_client.get_role(RoleName=role_name)
-    iam_role_arn = role["Role"]["Arn"]
-    print(f"The IAM role assumed now is: {assumed_role_arn}")
-    print(f"The IAM role attached: {iam_role_arn}")
-except botocore.exceptions.ClientError as e:
-    print(f"Error: {e}")
 
 knowledge_base_id = ""
 data_source_id = ""
