@@ -49,13 +49,13 @@ chmod a+rx resize.sh && ./resize.sh 80
 4) 소스를 다운로드합니다.
 
 ```java
-git clone https://github.com/kyopark2014/llm-multimodal-and-rag
+git clone https://github.com/kyopark2014/managed-rag
 ```
 
 5) cdk 폴더로 이동하여 필요한 라이브러리를 설치합니다.
 
 ```java
-cd llm-multimodal-and-rag/cdk-multimodal-and-rag/ && npm install
+cd managed-rag/cdk-managed-rag/ && npm install
 ```
 
 6) CDK 사용을 위해 Bootstraping을 수행합니다.
@@ -69,7 +69,7 @@ aws sts get-caller-identity --query Account --output text
 아래와 같이 bootstrap을 수행합니다. 여기서 "account-id"는 상기 명령어로 확인한 12자리의 Account ID입니다. bootstrap 1회만 수행하면 되므로, 기존에 cdk를 사용하고 있었다면 bootstrap은 건너뛰어도 됩니다.
 
 ```java
-cdk bootstrap aws://[account-id]/ap-northeast-2
+cdk bootstrap aws://[account-id]/us-west-2
 ```
 
 7) 인프라를 설치합니다.
@@ -89,18 +89,4 @@ cdk deploy --all
 
 ![noname](https://github.com/kyopark2014/llm-multimodal-and-rag/assets/52392004/1e273934-07ba-4319-bbdb-82445e424568)
 
-9) Hybrid 검색을 위한 Nori Plug-in 설치
-
-[OpenSearch Console](https://ap-northeast-2.console.aws.amazon.com/aos/home?region=ap-northeast-2#opensearch/domains)에서 "korean-chatbot-with-rag"로 들어가서 [Packages] - [Associate package]을 선택한 후에, 아래와 같이 "analysis-nori"을 설치합니다. 
-
-![image](https://github.com/kyopark2014/korean-chatbot-using-amazon-bedrock/assets/52392004/b91c91a1-b13c-4f5d-bd58-1c8298b2f128)
-
-10) Google API Key Update하기
-
-[api_key](https://developers.google.com/custom-search/docs/paid_element?hl=ko#api_key)에서 [키 가져오기] - [Select or create project]를 선택하여 Google API Key를 가져옵니다. 만약 기존 키가 없다면 새로 생성합니다.
-
-[새 검색엔진 만들기](https://programmablesearchengine.google.com/controlpanel/create?hl=ko)에서 검색엔진을 설정합니다. 이때, 검색할 내용은 "전체 웹 검색"을 선택하여야 합니다.
-
-[Secret Console](https://ap-northeast-2.console.aws.amazon.com/secretsmanager/secret?name=googl_api_key&region=ap-northeast-2)에 접속하여 [Retrieve secret value]를 선택하여, google_api_key와 google_cse_id를 업데이트합니다.
-
-11) Output의 WebUrlforllmmultimodalandrag 복사하여 브라우저로 접속합니다.
+9) Output의 WebUrlformanagedragchatbot 복사하여 브라우저로 접속합니다.
