@@ -1205,57 +1205,51 @@ def get_knowledge_base_id(knowledge_base_name):
                 knowledge_base_id = ""    
             print(f"successfully created: {knowledge_base_name}, {knowledge_base_id}")    
             
+            try:
+                response = client.create_data_source(
+                    dataDeletionPolicy='DELETE',
+                    dataSourceConfiguration={
+                        's3Configuration': {
+                            'bucketArn': s3_arn,
+                            'inclusionPrefixes': [
+                                'doc',
+                            ]
+                        },
+                        'type': 'S3'
+                    },
+                    description = f"S3 data source: {s3_bucket}",
+                    knowledgeBaseId = knowledge_base_id,
+                    name = s3_bucket,
+                    vectorIngestionConfiguration={
+                        'chunkingConfiguration': {
+                            'chunkingStrategy': 'HIERARCHICAL',
+                            'hierarchicalChunkingConfiguration': {
+                                'levelConfigurations': [
+                                    {
+                                        'maxTokens': 1500
+                                    },
+                                    {
+                                        'maxTokens': 300
+                                    }
+                                ],
+                                'overlapTokens': 60
+                            }
+                        }
+                    }
+                )
+                print('(create_data_source) response: ', response)
+                break
+            except Exception:
+                err_msg = traceback.format_exc()
+                print('error message: ', err_msg)
+                #raise Exception ("Not able to create the data source")
+            
         except Exception:
                 err_msg = traceback.format_exc()
                 print('error message: ', err_msg)
                 time.sleep(5)
                 print(f"retrying... ({atempt})")
-                #raise Exception ("Not able to create the knowledge base")
-        
-        # add data source
-        if knowledge_base_id:
-            for atempt in range(3):
-                try:
-                    response = client.create_data_source(
-                        dataDeletionPolicy='DELETE',
-                        dataSourceConfiguration={
-                            's3Configuration': {
-                                'bucketArn': s3_arn,
-                                'inclusionPrefixes': [
-                                    'doc/',
-                                ]
-                            },
-                            'type': 'S3'
-                        },
-                        description = f"S3 data source: {s3_bucket}",
-                        knowledgeBaseId = knowledge_base_id,
-                        name = s3_bucket,
-                        vectorIngestionConfiguration={
-                            'chunkingConfiguration': {
-                                'chunkingStrategy': 'HIERARCHICAL',
-                                'hierarchicalChunkingConfiguration': {
-                                    'levelConfigurations': [
-                                        {
-                                            'maxTokens': 1500
-                                        },
-                                        {
-                                            'maxTokens': 300
-                                        }
-                                    ],
-                                    'overlapTokens': 60
-                                }
-                            }
-                        }
-                    )
-                    print('(create_data_source) response: ', response)
-                    break
-                except Exception:
-                    err_msg = traceback.format_exc()
-                    print('error message: ', err_msg)
-                    time.sleep(5)
-                    print(f"retrying... ({atempt})")
-                    #raise Exception ("Not able to create the data source")
-            
+                #raise Exception ("Not able to create the knowledge base")        
     return knowledge_base_id
 
 knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
