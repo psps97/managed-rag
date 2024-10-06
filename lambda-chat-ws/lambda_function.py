@@ -78,6 +78,7 @@ token_counter_history = 0
 minDocSimilarity = 200
 projectName = os.environ.get('projectName')
 maxOutputTokens = 4096
+data_source_id = ""
 
 def load_secret():
     # api key to get weather information in agent
@@ -1068,27 +1069,13 @@ try:
     print(f"The IAM role attached: {iam_role_arn}")
 except botocore.exceptions.ClientError as e:
     print(f"Error: {e}")
-        
-def get_knowledge_base_id(knowledge_base_name):
-    print('knowledge_base_name: ', knowledge_base_name)
-    
-    client = boto3.client('bedrock-agent')         
-    response = client.list_knowledge_bases(
-        maxResults=10
-    )
-    print('response: ', response)
-                
-    if "knowledgeBaseSummaries" in response:
-        summaries = response["knowledgeBaseSummaries"]
-        for summary in summaries:
-            if summary["name"] == knowledge_base_name:
-                knowledge_base_id = summary["knowledgeBaseId"]
-                print('knowledge_base_id: ', knowledge_base_id)
-                return knowledge_base_id
-    
-    print('Not found knowledge_base_name: ', knowledge_base_name)
-        
-    # create opensearch index
+
+knowledge_base_id = ""
+data_source_id = ""
+def initiate_knowledge_base():
+    global knowledge_base_id, data_source_id
+    #########################
+    # opensearch index
     if(is_not_exist(vectorIndexName)):
         body={
             'settings':{
@@ -1165,94 +1152,137 @@ def get_knowledge_base_id(knowledge_base_name):
     print('embeddingModelArn: ', embeddingModelArn)
     print('knowledge_base_role: ', knowledge_base_role)
     
-    knowledge_base_id = ""
-    for atempt in range(3):
-        try:
-            response = client.create_knowledge_base(
-                name=knowledge_base_name,
-                description=f"Knowledge base named by {knowledge_base_name}",
-                roleArn=knowledge_base_role,
-                knowledgeBaseConfiguration={
-                    'type': 'VECTOR',
-                    'vectorKnowledgeBaseConfiguration': {
-                        'embeddingModelArn': embeddingModelArn,
-                        'embeddingModelConfiguration': {
-                            'bedrockEmbeddingModelConfiguration': {
-                                'dimensions': 1024
-                            }
-                        }
-                    }
-                },
-                storageConfiguration={
-                    'type': 'OPENSEARCH_SERVERLESS',
-                    'opensearchServerlessConfiguration': {
-                        'collectionArn': collectionArn,
-                        'fieldMapping': {
-                            'metadataField': 'AMAZON_BEDROCK_METADATA',
-                            'textField': 'AMAZON_BEDROCK_TEXT_CHUNK',
-                            'vectorField': 'vector_field'
-                        },
-                        'vectorIndexName': vectorIndexName
-                    }
-                }                
-            )   
-            print('(create_knowledge_base) response: ', response)
+    #########################
+    # knowledge base
+    print('knowledge_base_name: ', knowledge_base_name)    
+    try: 
+        client = boto3.client('bedrock-agent')         
+        response = client.list_knowledge_bases(
+            maxResults=10
+        )
+        print('(list_knowledge_bases) response: ', response)
         
-            if 'knowledgeBaseId' in response['knowledgeBase']:
-                knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
-                break
-            else:
-                knowledge_base_id = ""    
-            print(f"successfully created: {knowledge_base_name}, {knowledge_base_id}")    
-            
+        if "knowledgeBaseSummaries" in response:
+            summaries = response["knowledgeBaseSummaries"]
+            for summary in summaries:
+                if summary["name"] == knowledge_base_name:
+                    knowledge_base_id = summary["knowledgeBaseId"]
+                    print('knowledge_base_id: ', knowledge_base_id)
+    except Exception:
+        err_msg = traceback.format_exc()
+        print('error message: ', err_msg)
+                    
+    if not knowledge_base_id:
+        print('Not found knowledge_base_name: ', knowledge_base_name)    
+    
+        knowledge_base_id = ""    
+        for atempt in range(3):
             try:
-                response = client.create_data_source(
-                    dataDeletionPolicy='DELETE',
-                    dataSourceConfiguration={
-                        's3Configuration': {
-                            'bucketArn': s3_arn,
-                            'inclusionPrefixes': [
-                                'doc',
-                            ]
-                        },
-                        'type': 'S3'
-                    },
-                    description = f"S3 data source: {s3_bucket}",
-                    knowledgeBaseId = knowledge_base_id,
-                    name = s3_bucket,
-                    vectorIngestionConfiguration={
-                        'chunkingConfiguration': {
-                            'chunkingStrategy': 'HIERARCHICAL',
-                            'hierarchicalChunkingConfiguration': {
-                                'levelConfigurations': [
-                                    {
-                                        'maxTokens': 1500
-                                    },
-                                    {
-                                        'maxTokens': 300
-                                    }
-                                ],
-                                'overlapTokens': 60
+                response = client.create_knowledge_base(
+                    name=knowledge_base_name,
+                    description=f"Knowledge base named by {knowledge_base_name}",
+                    roleArn=knowledge_base_role,
+                    knowledgeBaseConfiguration={
+                        'type': 'VECTOR',
+                        'vectorKnowledgeBaseConfiguration': {
+                            'embeddingModelArn': embeddingModelArn,
+                            'embeddingModelConfiguration': {
+                                'bedrockEmbeddingModelConfiguration': {
+                                    'dimensions': 1024
+                                }
                             }
                         }
-                    }
-                )
-                print('(create_data_source) response: ', response)
-                break
-            except Exception:
-                err_msg = traceback.format_exc()
-                print('error message: ', err_msg)
-                #raise Exception ("Not able to create the data source")
+                    },
+                    storageConfiguration={
+                        'type': 'OPENSEARCH_SERVERLESS',
+                        'opensearchServerlessConfiguration': {
+                            'collectionArn': collectionArn,
+                            'fieldMapping': {
+                                'metadataField': 'AMAZON_BEDROCK_METADATA',
+                                'textField': 'AMAZON_BEDROCK_TEXT_CHUNK',
+                                'vectorField': 'vector_field'
+                            },
+                            'vectorIndexName': vectorIndexName
+                        }
+                    }                
+                )   
+                print('(create_knowledge_base) response: ', response)
             
+                if 'knowledgeBaseId' in response['knowledgeBase']:
+                    knowledge_base_id = response['knowledgeBase']['knowledgeBaseId']
+                    break
+                else:
+                    knowledge_base_id = ""    
+            except Exception:
+                    err_msg = traceback.format_exc()
+                    print('error message: ', err_msg)
+                    time.sleep(5)
+                    print(f"retrying... ({atempt})")
+                    #raise Exception ("Not able to create the knowledge base")       
+                
+    print(f"knowledge_base_name: {knowledge_base_name}, knowledge_base_name: {knowledge_base_id}")    
+    
+    #########################
+    # data source      
+    data_source_name = s3_bucket  
+    try: 
+        response = client.list_data_sources(
+            knowledgeBaseId=knowledge_base_id,
+            maxResults=10
+        )        
+        if 'dataSourceSummaries' in response:
+            for data_source in response['dataSourceSummaries']:
+                print('data_source: ', data_source)
+                if data_source['name'] == data_source_name:
+                    data_source_id = data_source['dataSourceId']
+                    print('data_source_id: ', data_source_id)
+                    break    
+    except Exception:
+        err_msg = traceback.format_exc()
+        print('error message: ', err_msg)
+        
+    if not data_source_id:
+        try:
+            response = client.create_data_source(
+                dataDeletionPolicy='DELETE',
+                dataSourceConfiguration={
+                    's3Configuration': {
+                        'bucketArn': s3_arn,
+                        'inclusionPrefixes': [
+                            'doc',
+                        ]
+                    },
+                    'type': 'S3'
+                },
+                description = f"S3 data source: {s3_bucket}",
+                knowledgeBaseId = knowledge_base_id,
+                name = data_source_name,
+                vectorIngestionConfiguration={
+                    'chunkingConfiguration': {
+                        'chunkingStrategy': 'HIERARCHICAL',
+                        'hierarchicalChunkingConfiguration': {
+                            'levelConfigurations': [
+                                {
+                                    'maxTokens': 1500
+                                },
+                                {
+                                    'maxTokens': 300
+                                }
+                            ],
+                            'overlapTokens': 60
+                        }
+                    }
+                }
+            )
+            print('(create_data_source) response: ', response)
         except Exception:
-                err_msg = traceback.format_exc()
-                print('error message: ', err_msg)
-                time.sleep(5)
-                print(f"retrying... ({atempt})")
-                #raise Exception ("Not able to create the knowledge base")        
-    return knowledge_base_id
-
-knowledge_base_id = get_knowledge_base_id(knowledge_base_name)
+            err_msg = traceback.format_exc()
+            print('error message: ', err_msg)
+            #raise Exception ("Not able to create the data source")
+    
+    print(f"data_source_name: {data_source_name}, data_source_id: {data_source_id}")
+        
+initiate_knowledge_base()
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     msg = reference = ""
