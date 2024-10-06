@@ -1243,6 +1243,7 @@ def initiate_knowledge_base():
         print('error message: ', err_msg)
         
     if not data_source_id:
+        print('creating data source.....')  
         try:
             response = client.create_data_source(
                 dataDeletionPolicy='DELETE',
@@ -1298,6 +1299,7 @@ def initiate_knowledge_base():
     # trigger sync of data source
     if knowledge_base_id and data_source_id:
         try:
+            print('syncing data source...')  
             client = boto3.client('bedrock-agent')
             response = client.start_ingestion_job(
                 knowledgeBaseId=knowledge_base_id,
