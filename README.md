@@ -382,7 +382,7 @@ if not data_source_id:
                 's3Configuration': {
                     'bucketArn': s3_arn,
                     'inclusionPrefixes': [ 
-                        'doc',
+                        s3_prefix,
                     ]
                 },
                 'type': 'S3'
