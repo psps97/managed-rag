@@ -60,7 +60,7 @@ if(is_not_exist(vectorIndexName)):
     }
 ```
 
-Lexical search는 아래와 같이 수행하였습니다. 
+Lexical search는 아래와 같이 수행하였습니다. 
 
 ```python
 def lexical_search(query, top_k):
