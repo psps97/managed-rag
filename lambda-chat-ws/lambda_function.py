@@ -1258,14 +1258,90 @@ def initiate_knowledge_base():
     print(f"data_source_name: {data_source_name}, data_source_id: {data_source_id}")
             
 initiate_knowledge_base()
+
+def lexical_search(query, top_k):
+    # lexical search (keyword)
+    min_match = 0
+    
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            "text": {
+                                "query": query,
+                                "minimum_should_match": f'{min_match}%',
+                                "operator":  "or",
+                            }
+                        }
+                    },
+                ],
+                "filter": [
+                ]
+            }
+        }
+    }
+
+    response = os_client.search(
+        body=query,
+        index=vectorIndexName   # "idx-*"  (all)
+    )
+    print('lexical query result: ', json.dumps(response))
+        
+    docs = []
+    for i, document in enumerate(response['hits']['hits']):
+        #print(f"{i}: {document['_source']['text']}")
+        print(f"{i}: {document}")
+        
+        #if i>=top_k: 
+        #    break
+                    
+        #excerpt = document['_source']['text']
+        
+        #name = document['_source']['metadata']['name']
+        # print('name: ', name)
+
+        #page = ""
+        #if "page" in document['_source']['metadata']:
+        #    page = document['_source']['metadata']['page']
+        
+        #url = ""
+        #if "url" in document['_source']['metadata']:
+        #    url = document['_source']['metadata']['url']            
+        
+        #docs.append(
+        #    Document(
+        #        page_content=excerpt,
+        #        metadata={
+        #            'name': name,
+        #            'url': url,
+        #            'page': page,
+        #            'from': 'lexical'
+        #        },
+        #    )
+        #)
+    
+    #for i, doc in enumerate(docs):
+        #print('doc: ', doc)
+        #print('doc content: ', doc.page_content)
+        
+    #    if len(doc.page_content)>=100:
+    #        text = doc.page_content[:100]
+    #    else:
+    #        text = doc.page_content            
+    #    print(f"--> lexical search doc[{i}]: {text}, metadata:{doc.metadata}")   
+        
+    #return docs
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     msg = reference = ""
+    top_k = 4
     relevant_docs = []
     if knowledge_base_id:    
         retriever = AmazonKnowledgeBasesRetriever(
             knowledge_base_id=knowledge_base_id, 
-            retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 4}},
+            retrieval_config={"vectorSearchConfiguration": {"numberOfResults": top_k}},
         )
         
         relevant_docs = retriever.invoke(text)
@@ -1291,6 +1367,9 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     
     if len(relevant_docs):
         reference = get_reference_of_knoweledge_base(relevant_docs, path, doc_prefix)  
+    
+    print('---> Lexical search')
+    lexical_search(text, top_k)
         
     return msg, reference
     
