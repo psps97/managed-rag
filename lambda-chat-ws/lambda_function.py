@@ -1041,7 +1041,7 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
             excerpt = document.page_content
         
         score = document.metadata["score"]
-        print('score:', score)
+        # print('score:', score)
         
         link = ""
         if "s3Location" in document.metadata["location"]:
@@ -1416,10 +1416,10 @@ def grade_documents(question, documents):
             print_doc(i, doc)
             
             score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
-            print("score: ", score)
+            # print("score: ", score)
             
             grade = score.binary_score
-            print("grade: ", grade)
+            # print("grade: ", grade)
             # Document relevant
             if grade.lower() == "yes":
                 print("---GRADE: DOCUMENT RELEVANT---")
@@ -1430,10 +1430,6 @@ def grade_documents(question, documents):
                 # We do not include the document in filtered_docs
                 # We set a flag to indicate that we want to run web search
                 continue
-    
-    global reference_docs 
-    reference_docs += filtered_docs    
-    # print('langth of reference_docs: ', len(reference_docs))
     
     # print('len(docments): ', len(filtered_docs))    
     return filtered_docs
@@ -1479,8 +1475,8 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
 
     msg = query_using_RAG_context(connectionId, requestId, chat, relevant_context, text)
     
-    if len(relevant_docs):
-        reference = get_reference_of_knoweledge_base(relevant_docs, path, doc_prefix)  
+    if len(filtered_docs):
+        reference = get_reference_of_knoweledge_base(filtered_docs, path, doc_prefix)  
             
     return msg, reference
     
