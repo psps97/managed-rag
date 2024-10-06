@@ -1276,7 +1276,8 @@ def initiate_knowledge_base():
                     'parsingConfiguration': {
                         'bedrockFoundationModelConfiguration': {
                             'modelArn': parsingModelArn
-                        }
+                        },
+                        'parsingStrategy': 'BEDROCK_FOUNDATION_MODEL'
                     }
                 }
             )
@@ -1302,6 +1303,7 @@ def initiate_knowledge_base():
                 knowledgeBaseId=knowledge_base_id,
                 dataSourceId=data_source_id
             )
+            print('(start_ingestion_job) response: ', response)
         except Exception:
             err_msg = traceback.format_exc()
             print('error message: ', err_msg)
@@ -1587,6 +1589,19 @@ def getResponse(connectionId, jsonBody):
                                                 
             else:
                 msg = "uploaded file: "+object
+                
+            # trigger sync of data source
+            if knowledge_base_id and data_source_id:
+                try:
+                    client = boto3.client('bedrock-agent')
+                    response = client.start_ingestion_job(
+                        knowledgeBaseId=knowledge_base_id,
+                        dataSourceId=data_source_id
+                    )
+                    print('(start_ingestion_job) response: ', response)
+                except Exception:
+                    err_msg = traceback.format_exc()
+                    print('error message: ', err_msg)
                                                         
         sendResultMessage(connectionId, requestId, msg+reference)
         # print('msg+reference: ', msg+reference)
