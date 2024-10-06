@@ -6,7 +6,7 @@
 </p>
 
 
-여기에서는 완전관리형 RAG(Fully Managed RAG)를 이용하여 편리하게 RAG 구성하는 방법을 설명합니다.
+여기에서는 완전관리형 RAG(Fully Managed RAG)를 이용하여 편리하게 RAG를 구성하는 방법을 설명합니다.
 
 ## 구현 주요 내용
 
