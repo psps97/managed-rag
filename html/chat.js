@@ -231,6 +231,16 @@ if(conversationType=="") {
 }
 console.log('conversationType: ', conversationType);
 
+// multi region
+let multi_region = localStorage.getItem('multiRegion'); // set userID if exists 
+if(multi_region=="" || multi_region==null) {
+    multi_mode = 'disable';    
+}
+else {
+    multi_mode = multi_region;
+}
+console.log('multi_region: ', multi_region);
+
 for (i=0;i<maxMsgItems;i++) {
     msglist.push(document.getElementById('msgLog'+i));
 
@@ -328,7 +338,7 @@ function onSend(e) {
             "body": message.value,
             "conv_type": conv_type,
             "rag_type": rag_type,
-            "function_type": function_type
+            "multi_region": multi_mode
         })
         
         sentTime.put(requestId, current);
@@ -664,7 +674,7 @@ attachFile.addEventListener('click', function(){
                                 "command": command,
                                 "conv_type": conv_type,
                                 "rag_type": rag_type,
-                                "function_type": function_type
+                                "multi_region": multi_mode
                             })
                         }
                         else if(xmlHttp.readyState == XMLHttpRequest.DONE && xmlHttp.status != 200) {

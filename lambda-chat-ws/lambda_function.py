@@ -38,6 +38,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
 
 from langchain_aws import AmazonKnowledgeBasesRetriever
+from pydantic.v1 import BaseModel, Field
 
 s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
@@ -80,6 +81,74 @@ minDocSimilarity = 200
 projectName = os.environ.get('projectName')
 maxOutputTokens = 4096
 data_source_id = ""
+
+multi_region_models = [   # claude sonnet 3.0
+    {   
+        "bedrock_region": "us-west-2", # Oregon
+        "model_type": "claude3",
+        "max_tokens": 4096,
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+    },
+    {
+        "bedrock_region": "us-east-1", # N.Virginia
+        "model_type": "claude3",
+        "max_tokens": 4096,
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+    },
+    {
+        "bedrock_region": "ca-central-1", # Canada
+        "model_type": "claude3",
+        "max_tokens": 4096,
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+    },
+    {
+        "bedrock_region": "eu-west-2", # London
+        "model_type": "claude3",
+        "max_tokens": 4096,
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+    },
+    {
+        "bedrock_region": "sa-east-1", # Sao Paulo
+        "model_type": "claude3",
+        "max_tokens": 4096,
+        "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+    }
+]
+multi_region = 'disable'
+
+def get_multi_region_chat(models, selected):
+    profile = models[selected]
+    bedrock_region =  profile['bedrock_region']
+    modelId = profile['model_id']
+    maxOutputTokens = 4096
+    print(f'selected_chat: {selected}, bedrock_region: {bedrock_region}, modelId: {modelId}')
+                          
+    # bedrock   
+    boto3_bedrock = boto3.client(
+        service_name='bedrock-runtime',
+        region_name=bedrock_region,
+        config=Config(
+            retries = {
+                'max_attempts': 30
+            }
+        )
+    )
+    parameters = {
+        "max_tokens":maxOutputTokens,     
+        "temperature":0.1,
+        "top_k":250,
+        "top_p":0.9,
+        "stop_sequences": [HUMAN_PROMPT]
+    }
+    # print('parameters: ', parameters)
+
+    chat = ChatBedrock(   # new chat model
+        model_id=modelId,
+        client=boto3_bedrock, 
+        model_kwargs=parameters,
+    )    
+    
+    return chat
 
 def load_secret():
     # api key to get weather information in agent
@@ -1259,80 +1328,123 @@ def initiate_knowledge_base():
             
 initiate_knowledge_base()
 
-def lexical_search(query, top_k):
-    # lexical search (keyword)
-    min_match = 0
-    
-    query = {
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "match": {
-                            "text": {
-                                "query": query,
-                                "minimum_should_match": f'{min_match}%',
-                                "operator":  "or",
-                            }
-                        }
-                    },
-                ],
-                "filter": [
-                ]
-            }
-        }
-    }
+class GradeDocuments(BaseModel):
+    """Binary score for relevance check on retrieved documents."""
 
-    response = os_client.search(
-        body=query,
-        index="*"   # "idx-*"  (all)
+    binary_score: str = Field(description="Documents are relevant to the question, 'yes' or 'no'")
+
+def get_retrieval_grader(chat):
+    system = """You are a grader assessing relevance of a retrieved document to a user question. \n 
+    If the document contains keyword(s) or semantic meaning related to the question, grade it as relevant. \n
+    Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
+
+    grade_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system),
+            ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
+        ]
     )
-    print('lexical query result: ', json.dumps(response))
-        
-    docs = []
-    for i, document in enumerate(response['hits']['hits']):
-        #print(f"{i}: {document['_source']['text']}")
-        print(f"{i}: {document}")
-        
-        #if i>=top_k: 
-        #    break
-                    
-        #excerpt = document['_source']['text']
-        
-        #name = document['_source']['metadata']['name']
-        # print('name: ', name)
-
-        #page = ""
-        #if "page" in document['_source']['metadata']:
-        #    page = document['_source']['metadata']['page']
-        
-        #url = ""
-        #if "url" in document['_source']['metadata']:
-        #    url = document['_source']['metadata']['url']            
-        
-        #docs.append(
-        #    Document(
-        #        page_content=excerpt,
-        #        metadata={
-        #            'name': name,
-        #            'url': url,
-        #            'page': page,
-        #            'from': 'lexical'
-        #        },
-        #    )
-        #)
     
-    #for i, doc in enumerate(docs):
-        #print('doc: ', doc)
-        #print('doc content: ', doc.page_content)
-        
-    #    if len(doc.page_content)>=100:
-    #        text = doc.page_content[:100]
-    #    else:
-    #        text = doc.page_content            
-    #    print(f"--> lexical search doc[{i}]: {text}, metadata:{doc.metadata}")   
-        
-    #return docs
+    structured_llm_grader = chat.with_structured_output(GradeDocuments)
+    retrieval_grader = grade_prompt | structured_llm_grader
+    return retrieval_grader
+
+def grade_document_based_on_relevance(conn, question, doc, models, selected):     
+    chat = get_multi_region_chat(models, selected)
+    retrieval_grader = get_retrieval_grader(chat)
+    score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
+    # print(f"score: {score}")
+    
+    grade = score.binary_score    
+    if grade == 'yes':
+        print("---GRADE: DOCUMENT RELEVANT---")
+        conn.send(doc)
+    else:  # no
+        print("---GRADE: DOCUMENT NOT RELEVANT---")
+        conn.send(None)
+    
+    conn.close()
+                                    
+def grade_documents_using_parallel_processing(question, documents):
+    global selected_chat
+    
+    filtered_docs = []    
+
+    processes = []
+    parent_connections = []
+    
+    for i, doc in enumerate(documents):
+        #print(f"grading doc[{i}]: {doc.page_content}")        
+        parent_conn, child_conn = Pipe()
+        parent_connections.append(parent_conn)
+            
+        process = Process(target=grade_document_based_on_relevance, args=(child_conn, question, doc, multi_region_models, selected_chat))
+        processes.append(process)
+
+        selected_chat = selected_chat + 1
+        if selected_chat == len(multi_region_models):
+            selected_chat = 0
+    for process in processes:
+        process.start()
+            
+    for parent_conn in parent_connections:
+        relevant_doc = parent_conn.recv()
+
+        if relevant_doc is not None:
+            filtered_docs.append(relevant_doc)
+
+    for process in processes:
+        process.join()
+    
+    #print('filtered_docs: ', filtered_docs)
+    return filtered_docs
+
+def grade_documents(question, documents):
+    print("###### grade_documents ######")
+    
+    filtered_docs = []
+    if multi_region == 'enable':  # parallel processing
+        print("start grading...")
+        filtered_docs = grade_documents_using_parallel_processing(question, documents)
+
+    else:
+        # Score each doc    
+        chat = get_chat()
+        retrieval_grader = get_retrieval_grader(chat)
+        for doc in documents:
+            # print('doc: ', doc)
+            print_doc(doc)
+            
+            score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
+            print("score: ", score)
+            
+            grade = score.binary_score
+            print("grade: ", grade)
+            # Document relevant
+            if grade.lower() == "yes":
+                print("---GRADE: DOCUMENT RELEVANT---")
+                filtered_docs.append(doc)
+            # Document not relevant
+            else:
+                print("---GRADE: DOCUMENT NOT RELEVANT---")
+                # We do not include the document in filtered_docs
+                # We set a flag to indicate that we want to run web search
+                continue
+    
+    global reference_docs 
+    reference_docs += filtered_docs    
+    # print('langth of reference_docs: ', len(reference_docs))
+    
+    # print('len(docments): ', len(filtered_docs))    
+    return filtered_docs
+
+def print_doc(i, doc):
+    if len(doc.page_content)>=100:
+        text = doc.page_content[:100]
+    else:
+        text = doc.page_content
+            
+    print(f"{i}: {text}, metadata:{doc.metadata}")
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     msg = reference = ""
@@ -1352,9 +1464,11 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         #    print('start priority search')
         #    selected_relevant_docs = priority_search(revised_question, relevant_docs, minDocSimilarity)
         #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
-        
+
+    filtered_docs = grade_documents(text, relevant_docs)
+            
     relevant_context = ""
-    for i, document in enumerate(relevant_docs):
+    for i, document in enumerate(filtered_docs):
         print(f"{i}: {document}")
         if document.page_content:
             content = document.page_content
@@ -1367,10 +1481,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     
     if len(relevant_docs):
         reference = get_reference_of_knoweledge_base(relevant_docs, path, doc_prefix)  
-    
-    print('---> Lexical search')
-    lexical_search(text, top_k)
-        
+            
     return msg, reference
     
 def traslation(chat, text, input_language, output_language):
@@ -1420,6 +1531,11 @@ def getResponse(connectionId, jsonBody):
         if jsonBody['rag_type']:
             rag_type = jsonBody['rag_type']  # RAG type
             print('rag_type: ', rag_type)
+    
+    global multi_region    
+    if "multi_region" in jsonBody:
+        multi_region = jsonBody['multi_region']
+    print('multi_region: ', multi_region)
     
     global enableReference
     global map_chain, memory_chain, debugMessageMode
