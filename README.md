@@ -297,7 +297,7 @@ except Exception:
     print('error message: ', err_msg)
 ```
 
-## Knowledge Base 생성
+### Knowledge Base 생성
 
 OpenSearch index 생성하는 동안에 바로 knowledge base를 생성하게 되면 관련 정보를 가져올 수 있으므로 delay를 두고 재시도 합니다. 
 
@@ -348,7 +348,7 @@ if not knowledge_base_id:
                 print(f"retrying... ({atempt})")
 ```
 
-## 데이터 소스 생성
+### 데이터 소스 생성
 
 Amazon S3를 바로보는 data source를 사용하고자 합니다. 먼저 data source가 이미 생성되어 있는지 [list_data_sources](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/quicksight/client/list_data_sources.html)으로 확인합니다.
 
@@ -425,7 +425,7 @@ if not data_source_id:
         print('error message: ', err_msg)
 ```            
 
-## 데이터 소스 동기화
+### 데이터 소스 동기화
 
 Boto3의 [start_ingestion_job](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agent/client/start_ingestion_job.html)을 이용하여 데이터 동기화를 요청합니다.
 
@@ -556,4 +556,42 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
         reference = reference + f"{i+1}. <a href={link} target=_blank>{name}</a>, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
                     
     return reference
+```
+
+
+
+## 직접 실습 해보기
+
+### 사전 준비 사항
+
+이 솔루션을 사용하기 위해서는 사전에 아래와 같은 준비가 되어야 합니다.
+
+- [AWS Account 생성](https://repost.aws/ko/knowledge-center/create-and-activate-aws-account)에 따라 계정을 준비합니다.
+
+### CDK를 이용한 인프라 설치
+
+본 실습에서는 us-west-2 리전을 사용합니다. [인프라 설치](./deployment.md)에 따라 CDK로 인프라 설치를 진행합니다. 
+
+## 실행결과
+
+채팅 메뉴에서 "RAG Knowledge Base"를 선택한 후에 "교보 다이렉트 보험에 대해 설명해주세요."라고 입력하면 아래와 같이 RAG를 통해 얻어진 정보와 관련 문서를 확인할 수 있습니다.
+
+![image](https://github.com/user-attachments/assets/ff287438-ca1d-4d52-a718-c1c67dac597f)
+
+
+## 결론
+
+Knowledge Base를 활용하여 RAG를 적용할 때에 데이터의 등록 및 삭제를 편리하게 할 수 있습니다. 여기에서는 knowledge base의 지식 저장소로 Serverless OpenSearch를 사용하고 있어서 인프라의 관리에 대한 노력을 줄이면서도 충분한 RAG 성능을 확보할 수 있습니다. 인프라를 효율적으로 관리하기 위하여 AWS CDK로 OpenSearch를 설치하고 index와 data source를 python code로 관리하는 방법을 설명하였습니다. 
+
+
+## 리소스 정리하기 
+
+더이상 인프라를 사용하지 않는 경우에 아래처럼 모든 리소스를 삭제할 수 있습니다. 
+
+1) [API Gateway Console](https://us-west-2.console.aws.amazon.com/apigateway/main/apis?region=us-west-2)로 접속하여 "api-chatbot-for-managed-rag-chatbot", "api-managed-rag-chatbot"을 삭제합니다.
+
+2) [Cloud9 Console](https://us-west-2.console.aws.amazon.com/cloud9control/home?region=us-west-2#/)에 접속하여 아래의 명령어로 전체 삭제를 합니다.
+
+```text
+cd ~/environment/langgraph-agent/cdk-langgraph-agent/ && cdk destroy --all
 ```
