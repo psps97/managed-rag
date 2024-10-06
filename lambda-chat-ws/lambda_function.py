@@ -350,10 +350,10 @@ def general_conversation(connectionId, requestId, chat, query):
     human = "{input}"
     
     prompt = ChatPromptTemplate.from_messages([("system", system), MessagesPlaceholder(variable_name="history"), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
     
     history = memory_chain.load_memory_variables({})["chat_history"]
-    print('memory_chain: ', history)
+    # print('memory_chain: ', history)
                 
     chain = prompt | chat    
     try: 
@@ -414,7 +414,7 @@ def get_summary(chat, docs):
     human = "<article>{text}</article>"
     
     prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
     
     chain = prompt | chat    
     try: 
@@ -454,7 +454,7 @@ def generate_code(connectionId, requestId, chat, text, context, mode):
     human = "<context>{text}</context>"
     
     prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
     
     chain = prompt | chat    
     try: 
@@ -494,7 +494,7 @@ def summary_of_code(chat, code, mode):
     human = "<article>{code}</article>"
     
     prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
     
     chain = prompt | chat    
     try: 
@@ -537,10 +537,10 @@ def revise_question(connectionId, requestId, chat, query):
         </question>"""
             
     prompt = ChatPromptTemplate.from_messages([("system", system), MessagesPlaceholder(variable_name="history"), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
     
     history = memory_chain.load_memory_variables({})["chat_history"]
-    print('memory_chain: ', history)
+    # print('memory_chain: ', history)
                 
     chain = prompt | chat    
     try: 
@@ -605,7 +605,7 @@ def query_using_RAG_context(connectionId, requestId, chat, context, revised_ques
     human = "{input}"
     
     prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    print('prompt: ', prompt)
+    # print('prompt: ', prompt)
                    
     chain = prompt | chat
     
@@ -1212,7 +1212,7 @@ def initiate_knowledge_base():
                     's3Configuration': {
                         'bucketArn': s3_arn,
                         'inclusionPrefixes': [ 
-                            'doc',
+                            s3_prefix,
                         ]
                     },
                     'type': 'S3'
