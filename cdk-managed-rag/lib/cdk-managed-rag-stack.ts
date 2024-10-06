@@ -246,6 +246,17 @@ export class CdkManagedRagStack extends cdk.Stack {
       }),
     );  
 
+    const knowledgeBaseBedrockPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: ["bedrock:*"],
+    });
+    knowledge_base_role.attachInlinePolicy( 
+      new iam.Policy(this, `bedrock-agent-bedrock-policy-for-${projectName}`, {
+        statements: [knowledgeBaseBedrockPolicy],
+      }),
+    );  
+
     // OpenSearch Serverless
     const collectionName = projectName
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {

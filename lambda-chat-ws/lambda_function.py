@@ -1079,6 +1079,7 @@ def initiate_knowledge_base():
     # opensearch index
     #########################
     if(is_not_exist(vectorIndexName)):
+        print(f"creating opensearch index... {vectorIndexName}")        
         body={
             'settings':{
                 "index.knn": True,
@@ -1132,13 +1133,12 @@ def initiate_knowledge_base():
             }
         }
             
-        print("creating index: ", vectorIndexName)
         try: # create index
             response = os_client.indices.create(
                 vectorIndexName,
                 body=body
             )
-            print('index was created:', response)
+            print('opensearch index was created:', response)
 
             # delay 3seconds
             time.sleep(5)
@@ -1173,12 +1173,12 @@ def initiate_knowledge_base():
         print('error message: ', err_msg)
                     
     if not knowledge_base_id:
-        print('creating knowledge base.....')        
+        print('creating knowledge base...')        
         for atempt in range(3):
             try:
                 response = client.create_knowledge_base(
                     name=knowledge_base_name,
-                    description=f"Knowledge base named by {knowledge_base_name}",
+                    description="Knowledge base based on OpenSearch",
                     roleArn=knowledge_base_role,
                     knowledgeBaseConfiguration={
                         'type': 'VECTOR',
@@ -1218,7 +1218,7 @@ def initiate_knowledge_base():
                     print(f"retrying... ({atempt})")
                     #raise Exception ("Not able to create the knowledge base")       
                 
-    print(f"knowledge_base_name: {knowledge_base_name}, knowledge_base_name: {knowledge_base_id}")    
+    print(f"knowledge_base_name: {knowledge_base_name}, knowledge_base_id: {knowledge_base_id}")    
     
     #########################
     # data source      
@@ -1243,7 +1243,7 @@ def initiate_knowledge_base():
         print('error message: ', err_msg)
         
     if not data_source_id:
-        print('creating data source.....')  
+        print('creating data source...')  
         try:
             response = client.create_data_source(
                 dataDeletionPolicy='DELETE',
