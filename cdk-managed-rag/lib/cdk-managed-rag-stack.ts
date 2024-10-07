@@ -27,25 +27,16 @@ const stage = 'dev';
 const s3_prefix = 'docs';
 const projectName = `managed-rag-chatbot`; 
 const bucketName = `storage-for-${projectName}-${accountId}-${region}`; 
-let kendra_region = process.env.CDK_DEFAULT_REGION;   //  "us-west-2"
-const rag_method = 'RetrievalPrompt'; // RetrievalPrompt, RetrievalQA, ConversationalRetrievalChain
 
 const enableReference = 'true';
-let opensearch_url = "";
 const debugMessageMode = 'false'; // if true, debug messages will be delivered to the client.
 const useParallelRAG = 'true';
 const numberOfRelevantDocs = '6';
-const kendraMethod = "custom_retriever"; // custom_retriever or kendra_retriever
-const allowDualSearch = 'false';
-const capabilities = JSON.stringify(["kendra", "opensearch"]); 
 const supportedFormat = JSON.stringify(["pdf", "txt", "csv", "pptx", "ppt", "docx", "doc", "xlsx", "py", "js", "md", 'png', 'jpeg', 'jpg']);  
-const separated_chat_history = 'true';
 
 const max_object_size = 102400000; // 100 MB max size of an object, 50MB(default)
 const enableHybridSearch = 'true';
-const enableParallelSummary = 'true';
 const enalbeParentDocumentRetrival = 'true';
-const speech_generation = 'false';
 const knowledge_base_name = `knowledge-base-for-${projectName}-${region}`
 const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`
 const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
