@@ -247,7 +247,7 @@ if(is_not_exist(vectorIndexName)):
     except Exception:
         err_msg = traceback.format_exc()
         print('error message: ', err_msg)                
-```python
+```
 
 Knowledge base가 이미 생성되어 있는지 확인하기 위하여 boto3의 [list_knowledge_bases](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agent/client/list_knowledge_bases.html)으로 현재의 knowledge base의 리스트를 확인합니다. 
             
