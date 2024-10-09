@@ -16,11 +16,9 @@ from botocore.config import Config
 from PIL import Image
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 from langchain_community.docstore.document import Document
 from langchain_community.vectorstores.faiss import FAISS
-from langchain_community.vectorstores.opensearch_vector_search import OpenSearchVectorSearch
 from langchain_community.embeddings import BedrockEmbeddings
 from multiprocessing import Process, Pipe
 
@@ -30,10 +28,8 @@ from langchain_aws import ChatBedrock
 from langchain_core.prompts import PromptTemplate
 
 from langchain.agents import tool
-from langchain.agents import AgentExecutor, create_react_agent
 from bs4 import BeautifulSoup
 from pytz import timezone
-from langchain_community.tools.tavily_search import TavilySearchResults
 from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
 
 from langchain_aws import AmazonKnowledgeBasesRetriever
@@ -243,7 +239,6 @@ def tavily_search(query, k):
 # result = tavily_search('what is LangChain', 2)
 # print('search result: ', result)
 
-
 def get_multi_region_chat(models, selected):
     profile = models[selected]
     bedrock_region =  profile['bedrock_region']
@@ -274,8 +269,7 @@ def get_multi_region_chat(models, selected):
         model_id=modelId,
         client=boto3_bedrock, 
         model_kwargs=parameters,
-    )    
-    
+    )        
     return chat
 
 weather_api_key = ""
@@ -1915,7 +1909,7 @@ def run_agent_executor(connectionId, requestId, query):
         chain = prompt | model
             
         response = chain.invoke(state["messages"])
-        print('call_model response: ', response[-1])
+        print('call_model response: ', response)
         
         return {"messages": [response]}
 
