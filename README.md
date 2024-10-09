@@ -271,7 +271,7 @@ except Exception:
 
 ### Knowledge Base 생성
 
-OpenSearch index 생성하는 동안에 바로 knowledge base를 생성하게 되면 관련 정보를 가져올 수 있으므로 delay를 두고 재시도 합니다. 
+OpenSearch index 생성하는 동안에 바로 knowledge base를 생성하게 되면 관련 정보를 가져올 수 있으므로 delay를 두고 재시도 합니다. Knowledge Base의 설정은 [KnowledgeBaseConfiguration](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_KnowledgeBaseConfiguration.html)을 참조합니다. 여기서 type은 "VECTOR"을 저정하도록 되어 있습니다. 
 
 ```python
 if not knowledge_base_id:
