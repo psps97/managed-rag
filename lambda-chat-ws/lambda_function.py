@@ -1762,9 +1762,9 @@ def search_by_tavily(keyword: str) -> str:
             # print('tavily response: ', response)
             
             print(f"--> tavily search result: {keyword}")
-            for r in response["results"]:
-                contnet = r.get("content")
-                print(f"{i}: {contnet}")
+            for i, r in enumerate(response["results"]):
+                content = r.get("content")
+                print(f"{i}: {content}")
 
                 name = r.get("title")
                 if name is None:
