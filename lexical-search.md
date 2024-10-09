@@ -16,7 +16,7 @@ Required: No
 ```
 
 
-아래와 같이 OpenSearch에서 index 생성시에 Nori를 설정하였으나, Knowledge Base에서 OpenSearch에서 등록이 되지 않는것으로 보여집니다. 
+아래와 같이 OpenSearch에서 index 생성시에 Nori를 설정합니다. (테스트중)
 
 ```python
 if(is_not_exist(vectorIndexName)):
