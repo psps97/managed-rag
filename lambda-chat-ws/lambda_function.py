@@ -1957,6 +1957,53 @@ def run_agent_executor(connectionId, requestId, query):
     #return msg[msg.find('<result>')+8:len(msg)-9]
     return msg
 
+#########################################################
+
+def get_references_for_agent(docs):
+    reference = "\n\nFrom\n"
+    for i, doc in enumerate(docs):
+        page = ""
+        if "page" in doc.metadata:
+            page = doc.metadata['page']
+            #print('page: ', page)            
+        url = ""
+        if "url" in doc.metadata:
+            url = doc.metadata['url']
+            #print('url: ', url)                
+        name = ""
+        if "name" in doc.metadata:
+            name = doc.metadata['name']
+            #print('name: ', name)     
+           
+        sourceType = ""
+        if "from" in doc.metadata:
+            sourceType = doc.metadata['from']
+        else:
+            if useEnhancedSearch:
+                sourceType = "OpenSearch"
+            else:
+                sourceType = "WWW"
+        #print('sourceType: ', sourceType)        
+        
+        #if len(doc.page_content)>=1000:
+        #    excerpt = ""+doc.page_content[:1000]
+        #else:
+        #    excerpt = ""+doc.page_content
+        excerpt = ""+doc.page_content
+        # print('excerpt: ', excerpt)
+        
+        # for some of unusual case 
+        #excerpt = excerpt.replace('"', '')        
+        #excerpt = ''.join(c for c in excerpt if c not in '"')
+        excerpt = re.sub('"', '', excerpt)
+        print('excerpt(quotation removed): ', excerpt)
+        
+        if page:                
+            reference = reference + f"{i+1}. {page}page in <a href={url} target=_blank>{name}</a>, {sourceType}, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
+        else:
+            reference = reference + f"{i+1}. <a href={url} target=_blank>{name}</a>, {sourceType}, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
+    return reference
+
 def getResponse(connectionId, jsonBody):
     userId  = jsonBody['user_id']
     # print('userId: ', userId)
@@ -1981,6 +2028,9 @@ def getResponse(connectionId, jsonBody):
     if "multi_region" in jsonBody:
         multi_region = jsonBody['multi_region']
     print('multi_region: ', multi_region)
+    
+    global reference_docs
+    reference_docs = []
     
     global enableReference
     global map_chain, memory_chain, debugMessageMode
@@ -2090,6 +2140,9 @@ def getResponse(connectionId, jsonBody):
                     
                 memory_chain.chat_memory.add_user_message(text)
                 memory_chain.chat_memory.add_ai_message(msg)
+                
+                if reference_docs:
+                    reference = get_references_for_agent(reference_docs)
                         
         elif type == 'document':
             isTyping(connectionId, requestId)
