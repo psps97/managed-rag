@@ -1449,7 +1449,10 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     if knowledge_base_id:    
         retriever = AmazonKnowledgeBasesRetriever(
             knowledge_base_id=knowledge_base_id, 
-            retrieval_config={"vectorSearchConfiguration": {"numberOfResults": top_k}},
+            retrieval_config={"vectorSearchConfiguration": {
+                "numberOfResults": top_k,
+                "overrideSearchType": "HYBRID"
+            }},
         )
         
         relevant_docs = retriever.invoke(text)
