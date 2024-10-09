@@ -23,7 +23,6 @@ from langchain_community.vectorstores.faiss import FAISS
 from langchain_community.vectorstores.opensearch_vector_search import OpenSearchVectorSearch
 from langchain_community.embeddings import BedrockEmbeddings
 from multiprocessing import Process, Pipe
-from googleapiclient.discovery import build
 
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -1886,7 +1885,7 @@ def run_agent_executor(connectionId, requestId, query):
         else:           
             next = "continue"     
         
-        print(f"should_continue: {next}")
+        print(f"should_continue response: {next}")
         return next
 
     def call_model(state: State):
@@ -1916,7 +1915,7 @@ def run_agent_executor(connectionId, requestId, query):
         chain = prompt | model
             
         response = chain.invoke(state["messages"])
-        print('response (call_model): ', response[-1])
+        print('call_model response: ', response[-1])
         
         return {"messages": [response]}
 
