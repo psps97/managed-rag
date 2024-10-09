@@ -1645,6 +1645,7 @@ def traslation(chat, text, input_language, output_language):
 @tool
 def get_current_time(format: str=f"%Y-%m-%d %H:%M:%S")->str:
     """Returns the current date and time in the specified format"""
+    print("###### get_current_time ######")
     # f"%Y-%m-%d %H:%M:%S"
     
     format = format.replace('\'','')
@@ -1666,6 +1667,7 @@ def get_book_list(keyword: str) -> str:
     keyword: search keyword
     return: book list
     """
+    print("###### get_book_list ######")
     
     keyword = keyword.replace('\'','')
 
@@ -1693,6 +1695,7 @@ def get_weather_info(city: str) -> str:
     city: the name of city to retrieve
     return: weather statement
     """    
+    print("###### get_weather_info ######")
     
     city = city.replace('\n','')
     city = city.replace('\'','')
@@ -1748,6 +1751,8 @@ def search_by_tavily(keyword: str) -> str:
     keyword: search keyword
     return: the information of keyword
     """    
+    print("###### search_by_tavily ######")
+    
     global reference_docs, selected_tavily
     
     docs = []
@@ -1809,6 +1814,8 @@ def search_by_opensearch(keyword: str) -> str:
     keyword: search keyword
     return: the technical information of keyword
     """    
+    print("###### search_by_opensearch ######")
+    
     global reference_docs
     
     print('keyword: ', keyword)
@@ -1909,7 +1916,7 @@ def run_agent_executor(connectionId, requestId, query):
         chain = prompt | model
             
         response = chain.invoke(state["messages"])
-        print('call_model response: ', response)
+        print('call_model response: ', response.tool_calls)
         
         return {"messages": [response]}
 
