@@ -236,8 +236,8 @@ def tavily_search(query, k):
             print('Exception: ', e)
     return docs
 
-# result = tavily_search('what is LangChain', 2)
-# print('search result: ', result)
+#result = tavily_search('what is LangChain', 2)
+#print('search result: ', result)
 
 def get_multi_region_chat(models, selected):
     profile = models[selected]
@@ -1763,7 +1763,7 @@ def get_weather_info(city: str) -> str:
 def search_by_tavily(keyword: str) -> str:
     """
     Search general information by keyword and then return the result as a string.
-    keyword: search keyword
+    keyword: search keyword which is greater than the minimum of 4 characters
     return: the information of keyword
     """    
     print("###### search_by_tavily ######")
