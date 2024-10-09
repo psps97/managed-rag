@@ -74,7 +74,7 @@ if(is_not_exist(vectorIndexName)):
     }
 ```
 
-Lexical search는 아래와 같이 수행하였습니다. 
+Lexical search를 직접 opensearch로 할 경우에는 응답을 얻지 못했습니다. 
 
 ```python
 def lexical_search(query, top_k):
