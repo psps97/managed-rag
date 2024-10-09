@@ -15,16 +15,14 @@ RUN /var/lang/bin/python3 -m pip install langchain-aws
 RUN /var/lang/bin/python3 -m pip install unstructured
 RUN /var/lang/bin/python3 -m pip install opensearch-py
 RUN /var/lang/bin/python3 -m pip install faiss-cpu
-RUN /var/lang/bin/python3 -m pip install google-api-python-client
 RUN /var/lang/bin/python3 -m pip install anthropic
 RUN /var/lang/bin/python3 -m pip install python-pptx
 RUN /var/lang/bin/python3 -m pip install python-docx
 RUN /var/lang/bin/python3 -m pip install pytz
-# RUN /var/lang/bin/python3 -m pip install requests-aws4auth
+RUN /var/lang/bin/python3 -m pip install tavily-python
+RUN /var/lang/bin/python3 -m pip install langgraph
 
 RUN /var/lang/bin/python3 -m pip install botocore --upgrade
 RUN /var/lang/bin/python3 -m pip install boto3 --upgrade
-RUN /var/lang/bin/python3 -m pip install tavily-python
-RUN /var/lang/bin/python3 -m pip install langgraph
 
 CMD ["lambda_function.lambda_handler"]
