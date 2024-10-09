@@ -39,6 +39,11 @@ from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
 
 from langchain_aws import AmazonKnowledgeBasesRetriever
 from pydantic.v1 import BaseModel, Field
+from tavily import TavilyClient  
+from langgraph.graph import START, END, StateGraph
+from typing import Annotated, List, Tuple, TypedDict, Literal, Sequence, Union
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode
 
 s3 = boto3.client('s3')
 s3_bucket = os.environ.get('s3_bucket') # bucket name
@@ -116,6 +121,125 @@ multi_region_models = [   # claude sonnet 3.0
 ]
 multi_region = 'disable'
 
+reference_docs = []
+
+secretsmanager = boto3.client('secretsmanager')
+
+tavily_api_key = ""
+def load_secrets():
+    global tavily_api_key
+    secretsmanager = boto3.client('secretsmanager')
+    
+    # api key to use LangSmith
+    langsmith_api_key = ""
+    try:
+        get_langsmith_api_secret = secretsmanager.get_secret_value(
+            SecretId=f"langsmithapikey-{projectName}"
+        )
+        # print('get_langsmith_api_secret: ', get_langsmith_api_secret)
+        secret = json.loads(get_langsmith_api_secret['SecretString'])
+        #print('secret: ', secret)
+        langsmith_api_key = secret['langsmith_api_key']
+        langchain_project = secret['langchain_project']
+    except Exception as e:
+        raise e
+
+    if langsmith_api_key:
+        os.environ["LANGCHAIN_API_KEY"] = langsmith_api_key
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_PROJECT"] = langchain_project
+        
+    # api key to use Tavily Search    
+    try:
+        get_tavily_api_secret = secretsmanager.get_secret_value(
+            SecretId=f"tavilyapikey-{projectName}"
+        )
+        #print('get_tavily_api_secret: ', get_tavily_api_secret)
+        secret = json.loads(get_tavily_api_secret['SecretString'])
+        # print('secret: ', secret)
+        tavily_api_key = json.loads(secret['tavily_api_key'])
+        # print('tavily_api_key: ', tavily_api_key)
+    except Exception as e: 
+        raise e
+    
+    try:
+        get_weather_api_secret = secretsmanager.get_secret_value(
+            SecretId=f"openweathermap-{projectName}"
+        )
+        #print('get_weather_api_secret: ', get_weather_api_secret)
+        secret = json.loads(get_weather_api_secret['SecretString'])
+        #print('secret: ', secret)
+        weather_api_key = secret['weather_api_key']
+
+    except Exception as e:
+        raise e
+load_secrets()
+
+def check_tavily_secret(tavily_api_key):
+    query = 'what is LangGraph'
+    valid_keys = []
+    for key in tavily_api_key:
+        try:
+            tavily_client = TavilyClient(api_key=key)
+            response = tavily_client.search(query, max_results=1)
+            # print('tavily response: ', response)
+            
+            if 'results' in response and len(response['results']):
+                valid_keys.append(key)
+        except Exception as e:
+            print('Exception: ', e)
+    # print('valid_keys: ', valid_keys)
+    
+    return valid_keys
+
+tavily_api_key = check_tavily_secret(tavily_api_key)
+print('The number of valid tavily api keys: ', len(tavily_api_key))
+
+selected_tavily = -1
+if len(tavily_api_key):
+    os.environ["TAVILY_API_KEY"] = tavily_api_key[0]
+    selected_tavily = 0
+
+def tavily_search(query, k):
+    global selected_tavily
+    docs = []
+        
+    if selected_tavily != -1:
+        selected_tavily = selected_tavily + 1
+        if selected_tavily == len(tavily_api_key):
+            selected_tavily = 0
+
+        try:
+            tavily_client = TavilyClient(api_key=tavily_api_key[selected_tavily])
+            response = tavily_client.search(query, max_results=k)
+            # print('tavily response: ', response)
+            
+            if "url" in r:
+                url = r.get("url")
+                
+            for r in response["results"]:
+                name = r.get("title")
+                if name is None:
+                    name = 'WWW'
+            
+                docs.append(
+                    Document(
+                        page_content=r.get("content"),
+                        metadata={
+                            'name': name,
+                            'url': url,
+                            'from': 'tavily'
+                        },
+                    )
+                )   
+        except Exception as e:
+            print('Exception: ', e)
+    return docs
+
+# result = tavily_search('what is LangChain', 2)
+# print('search result: ', result)
+
+
 def get_multi_region_chat(models, selected):
     profile = models[selected]
     bedrock_region =  profile['bedrock_region']
@@ -150,8 +274,10 @@ def get_multi_region_chat(models, selected):
     
     return chat
 
+weather_api_key = ""
 def load_secret():
-    # api key to get weather information in agent
+    global weather_api_key
+    # api key to get weather information in agent    
     secretsmanager = boto3.client('secretsmanager')
     try:
         get_weather_api_secret = secretsmanager.get_secret_value(
@@ -1514,6 +1640,308 @@ def traslation(chat, text, input_language, output_language):
 
     return msg[msg.find('<result>')+8:len(msg)-9] # remove <result> tag
 
+####################### LangGraph #######################
+# Chat Agent Executor
+#########################################################
+
+@tool
+def get_current_time(format: str=f"%Y-%m-%d %H:%M:%S")->str:
+    """Returns the current date and time in the specified format"""
+    # f"%Y-%m-%d %H:%M:%S"
+    
+    format = format.replace('\'','')
+    timestr = datetime.datetime.now(timezone('Asia/Seoul')).strftime(format)
+    # print('timestr:', timestr)
+    
+    return timestr
+
+def get_lambda_client(region):
+    return boto3.client(
+        service_name='lambda',
+        region_name=region
+    )
+
+@tool 
+def get_book_list(keyword: str) -> str:
+    """
+    Search book list by keyword and then return book list
+    keyword: search keyword
+    return: book list
+    """
+    
+    keyword = keyword.replace('\'','')
+
+    answer = ""
+    url = f"https://search.kyobobook.co.kr/search?keyword={keyword}&gbCode=TOT&target=total"
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        prod_info = soup.find_all("a", attrs={"class": "prod_info"})
+        
+        if len(prod_info):
+            answer = "추천 도서는 아래와 같습니다.\n"
+            
+        for prod in prod_info[:5]:
+            title = prod.text.strip().replace("\n", "")       
+            link = prod.get("href")
+            answer = answer + f"{title}, URL: {link}\n\n"
+    
+    return answer
+
+@tool
+def get_weather_info(city: str) -> str:
+    """
+    retrieve weather information by city name and then return weather statement.
+    city: the name of city to retrieve
+    return: weather statement
+    """    
+    
+    city = city.replace('\n','')
+    city = city.replace('\'','')
+    city = city.replace('\"','')
+                
+    chat = get_chat()
+    if isKorean(city):
+        place = traslation(chat, city, "Korean", "English")
+        print('city (translated): ', place)
+    else:
+        place = city
+        city = traslation(chat, city, "English", "Korean")
+        print('city (translated): ', city)
+        
+    print('place: ', place)
+    
+    weather_str: str = f"{city}에 대한 날씨 정보가 없습니다."
+    if weather_api_key: 
+        apiKey = weather_api_key
+        lang = 'en' 
+        units = 'metric' 
+        api = f"https://api.openweathermap.org/data/2.5/weather?q={place}&APPID={apiKey}&lang={lang}&units={units}"
+        # print('api: ', api)
+                
+        try:
+            result = requests.get(api)
+            result = json.loads(result.text)
+            print('result: ', result)
+        
+            if 'weather' in result:
+                overall = result['weather'][0]['main']
+                current_temp = result['main']['temp']
+                min_temp = result['main']['temp_min']
+                max_temp = result['main']['temp_max']
+                humidity = result['main']['humidity']
+                wind_speed = result['wind']['speed']
+                cloud = result['clouds']['all']
+                
+                weather_str = f"{city}의 현재 날씨의 특징은 {overall}이며, 현재 온도는 {current_temp}도 이고, 최저온도는 {min_temp}도, 최고 온도는 {max_temp}도 입니다. 현재 습도는 {humidity}% 이고, 바람은 초당 {wind_speed} 미터 입니다. 구름은 {cloud}% 입니다."
+                #weather_str = f"Today, the overall of {city} is {overall}, current temperature is {current_temp} degree, min temperature is {min_temp} degree, highest temperature is {max_temp} degree. huminity is {humidity}%, wind status is {wind_speed} meter per second. the amount of cloud is {cloud}%."            
+        except Exception:
+            err_msg = traceback.format_exc()
+            print('error message: ', err_msg)                    
+            # raise Exception ("Not able to request to LLM")    
+        
+    print('weather_str: ', weather_str)                            
+    return weather_str
+
+@tool
+def search_by_tavily(keyword: str) -> str:
+    """
+    Search general information by keyword and then return the result as a string.
+    keyword: search keyword
+    return: the information of keyword
+    """    
+    global reference_docs, selected_tavily
+    
+    docs = []
+    if selected_tavily != -1:
+        selected_tavily = selected_tavily + 1
+        if selected_tavily == len(tavily_api_key):
+            selected_tavily = 0
+
+        try:
+            tavily_client = TavilyClient(api_key=tavily_api_key[selected_tavily])
+            response = tavily_client.search(keyword, max_results=3)
+            # print('tavily response: ', response)
+            
+            if "url" in r:
+                url = r.get("url")
+                
+            for r in response["results"]:
+                name = r.get("title")
+                if name is None:
+                    name = 'WWW'
+            
+                content = r.get("content")
+                docs.append(
+                    Document(
+                        page_content=content,
+                        metadata={
+                            'name': name,
+                            'url': url,
+                            'from': 'tavily'
+                        },
+                    )
+                )   
+        except Exception as e:
+            print('Exception: ', e)
+        
+        filtered_docs = grade_documents(keyword, docs)
+        
+    relevant_context = ""
+    for i, document in enumerate(filtered_docs):
+        print(f"{i}: {document}")
+        if document.page_content:
+            content = document.page_content
+            
+        relevant_context = relevant_context + content + "\n\n"        
+    print('relevant_context: ', relevant_context)
+        
+    reference_docs += filtered_docs
+        
+    return relevant_context
+
+@tool    
+def search_by_opensearch(keyword: str) -> str:
+    """
+    Search technical information by keyword and then return the result as a string.
+    keyword: search keyword
+    return: the technical information of keyword
+    """    
+    global reference_docs
+    
+    print('keyword: ', keyword)
+    keyword = keyword.replace('\'','')
+    keyword = keyword.replace('|','')
+    keyword = keyword.replace('\n','')
+    print('modified keyword: ', keyword)
+    
+    top_k = 4
+    relevant_docs = []
+    if knowledge_base_id:    
+        retriever = AmazonKnowledgeBasesRetriever(
+            knowledge_base_id=knowledge_base_id, 
+            retrieval_config={"vectorSearchConfiguration": {
+                "numberOfResults": top_k,
+                "overrideSearchType": "HYBRID"   # SEMANTIC
+            }},
+        )
+        
+        relevant_docs = retriever.invoke(keyword)
+        # print('relevant_docs: ', relevant_docs)
+        print('--> relevant_docs for knowledge base')
+        for i, doc in enumerate(relevant_docs):
+            print_doc(i, doc)
+        
+        #selected_relevant_docs = []
+        #if len(relevant_docs)>=1:
+        #    print('start priority search')
+        #    selected_relevant_docs = priority_search(revised_question, relevant_docs, minDocSimilarity)
+        #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
+
+    filtered_docs = grade_documents(keyword, relevant_docs)
+            
+    relevant_context = ""
+    for i, document in enumerate(filtered_docs):
+        print(f"{i}: {document}")
+        if document.page_content:
+            content = document.page_content
+            
+        relevant_context = relevant_context + content + "\n\n"        
+    print('relevant_context: ', relevant_context)
+        
+    reference_docs += filtered_docs
+        
+    return relevant_context
+
+def run_agent_executor(connectionId, requestId, query):
+    chatModel = get_chat() 
+    tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_opensearch]        
+
+    model = chatModel.bind_tools(tools)
+
+    class State(TypedDict):
+        # messages: Annotated[Sequence[BaseMessage], operator.add]
+        messages: Annotated[list, add_messages]
+
+    tool_node = ToolNode(tools)
+
+    def should_continue(state: State) -> Literal["continue", "end"]:
+        print("###### should_continue ######")
+        messages = state["messages"]    
+        # print('(should_continue) messages: ', messages)
+        
+        last_message = messages[-1]
+        if not last_message.tool_calls:
+            return "end"
+        else:                
+            return "continue"
+
+    def call_model(state: State):
+        print("###### call_model ######")
+        print('state: ', state["messages"])
+        
+        if isKorean(state["messages"][0].content)==True:
+            system = (
+                "당신의 이름은 서연이고, 질문에 친근한 방식으로 대답하도록 설계된 대화형 AI입니다."
+                "상황에 맞는 구체적인 세부 정보를 충분히 제공합니다."
+                "모르는 질문을 받으면 솔직히 모른다고 말합니다."
+                "최종 답변에는 조사한 내용을 반드시 포함합니다."
+            )
+        else: 
+            system = (            
+                "You are a conversational AI designed to answer in a friendly way to a question."
+                "If you don't know the answer, just say that you don't know, don't try to make up an answer."
+                "You will be acting as a thoughtful advisor."    
+            )
+            
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system),
+                MessagesPlaceholder(variable_name="messages"),
+            ]
+        )
+        chain = prompt | model
+            
+        response = chain.invoke(state["messages"])
+        return {"messages": [response]}
+
+    def buildChatAgent():
+        workflow = StateGraph(State)
+
+        workflow.add_node("agent", call_model)
+        workflow.add_node("action", tool_node)
+        workflow.add_edge(START, "agent")
+        workflow.add_conditional_edges(
+            "agent",
+            should_continue,
+            {
+                "continue": "action",
+                "end": END,
+            },
+        )
+        workflow.add_edge("action", "agent")
+
+        return workflow.compile()
+
+    app = buildChatAgent()
+        
+    isTyping(connectionId, requestId)
+    
+    inputs = [HumanMessage(content=query)]
+    config = {"recursion_limit": 50}
+    
+    message = ""
+    for event in app.stream({"messages": inputs}, config, stream_mode="values"):   
+        # print('event: ', event)
+        
+        message = event["messages"][-1]
+        # print('message: ', message)
+
+    msg = readStreamMsg(connectionId, requestId, message.content)
+
+    #return msg[msg.find('<result>')+8:len(msg)-9]
+    return msg
+
 def getResponse(connectionId, jsonBody):
     userId  = jsonBody['user_id']
     # print('userId: ', userId)
@@ -1630,6 +2058,14 @@ def getResponse(connectionId, jsonBody):
                 elif conv_type == 'qa-knowledge-base':   # RAG - Vector
                     print(f'rag_type: {rag_type}')
                     msg, reference = get_answer_using_knowledge_base(chat, text, connectionId, requestId)
+                
+                elif conv_type == 'agent-executor':
+                    msg = run_agent_executor(connectionId, requestId, text)
+                
+                elif conv_type == 'agent-executor-chat':
+                    revised_question = revise_question(connectionId, requestId, chat, text)     
+                    print('revised_question: ', revised_question)  
+                    msg = run_agent_executor(connectionId, requestId, text)
                                     
                 # token counter
                 if debugMessageMode=='true':
