@@ -1155,7 +1155,6 @@ def get_reference(docs):
     return reference
 
 def get_reference_from_knoweledge_base(docs, path, doc_prefix):
-    reference = "\n\nFrom\n"
     #print('path: ', path)
     #print('doc_prefix: ', doc_prefix)
     #print('prefix: ', f"/{doc_prefix}")
@@ -1850,7 +1849,7 @@ def search_by_knowledge_base(keyword: str) -> str:
         
         relevant_docs = retriever.invoke(keyword)
         # print('relevant_docs: ', relevant_docs)
-        print('--> relevant_docs for knowledge base')
+        print('--> relevant_docs from knowledge base')
         for i, doc in enumerate(relevant_docs):
             print_doc(i, doc)
         
@@ -1874,11 +1873,13 @@ def search_by_knowledge_base(keyword: str) -> str:
     if len(filtered_docs):
         reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)
         
+    print('reference_docs: ', reference_docs)
+        
     return relevant_context
 
 def run_agent_executor(connectionId, requestId, query):
     chatModel = get_chat() 
-    tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_knowledge_base]        
+    tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_knowledge_base]
 
     model = chatModel.bind_tools(tools)
 
@@ -1967,6 +1968,8 @@ def run_agent_executor(connectionId, requestId, query):
         # print('message: ', message)
 
     msg = readStreamMsg(connectionId, requestId, message.content)
+    
+    print('reference_docs: ', reference_docs)
 
     #return msg[msg.find('<result>')+8:len(msg)-9]
     return msg
