@@ -212,19 +212,24 @@ def tavily_search(query, k):
         try:
             tavily_client = TavilyClient(api_key=tavily_api_key[selected_tavily])
             response = tavily_client.search(query, max_results=k)
+            
             # print('tavily response: ', response)
             
-            if "url" in r:
-                url = r.get("url")
+            for i, r in enumerate(response["results"]):
+                contnet = r.get("content")
+                print(f"{i}: {contnet}")
                 
-            for r in response["results"]:
                 name = r.get("title")
                 if name is None:
                     name = 'WWW'
+                
+                url = ""
+                if "url" in r:
+                    url = r.get("url")
             
                 docs.append(
                     Document(
-                        page_content=r.get("content"),
+                        page_content=contnet,
                         metadata={
                             'name': name,
                             'url': url,
@@ -1763,15 +1768,19 @@ def search_by_tavily(keyword: str) -> str:
             response = tavily_client.search(keyword, max_results=3)
             # print('tavily response: ', response)
             
-            if "url" in r:
-                url = r.get("url")
-                
+            print(f"--> tavily search result: {keyword}")
             for r in response["results"]:
+                contnet = r.get("content")
+                print(f"{i}: {contnet}")
+
                 name = r.get("title")
                 if name is None:
                     name = 'WWW'
+                    
+                url = ""
+                if "url" in r:
+                    url = r.get("url")
             
-                content = r.get("content")
                 docs.append(
                     Document(
                         page_content=content,
@@ -1878,7 +1887,7 @@ def run_agent_executor(connectionId, requestId, query):
 
     def call_model(state: State):
         print("###### call_model ######")
-        print('state: ', state["messages"])
+        # print('state: ', state["messages"])
         
         if isKorean(state["messages"][0].content)==True:
             system = (
@@ -1903,6 +1912,8 @@ def run_agent_executor(connectionId, requestId, query):
         chain = prompt | model
             
         response = chain.invoke(state["messages"])
+        print('response (call_model): ', response[-1])
+        
         return {"messages": [response]}
 
     def buildChatAgent():
