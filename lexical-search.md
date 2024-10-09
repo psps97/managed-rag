@@ -74,6 +74,8 @@ if(is_not_exist(vectorIndexName)):
     }
 ```
 
+# OpenSearch에 직접 Query시 (실패)
+
 Lexical search를 직접 opensearch로 할 경우에는 응답을 얻지 못했습니다. 
 
 ```python
@@ -136,8 +138,6 @@ lexical query result:
     }
 }
 ```
-
-따라서, 별로도 OpenSearch에 입력하여야만 keyword 검색이 가능합니다.
 
 
 
