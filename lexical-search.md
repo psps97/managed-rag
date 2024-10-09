@@ -2,6 +2,20 @@
 
 OpenSearch는 Vector/Lexical Search를 모두 지원합니다.
 
+[overrideSearchType](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_KnowledgeBaseVectorSearchConfiguration.html#bedrock-Type-agent-runtime_KnowledgeBaseVectorSearchConfiguration-overrideSearchType)을 참조합니다.
+
+```text
+overrideSearchType
+By default, Amazon Bedrock decides a search strategy for you. If you're using an Amazon OpenSearch Serverless vector store that contains a filterable text field, you can specify whether to query the knowledge base with a HYBRID search using both vector embeddings and raw text, or SEMANTIC search using only vector embeddings. For other vector store configurations, only SEMANTIC search is available. For more information, see Test a knowledge base.
+
+Type: String
+
+Valid Values: HYBRID | SEMANTIC
+
+Required: No
+```
+
+
 아래와 같이 OpenSearch에서 index 생성시에 Nori를 설정하였으나, Knowledge Base에서 OpenSearch에서 등록이 되지 않는것으로 보여집니다. 
 
 ```python
@@ -126,14 +140,4 @@ lexical query result:
 따라서, 별로도 OpenSearch에 입력하여야만 keyword 검색이 가능합니다.
 
 
-```text
-overrideSearchType
-By default, Amazon Bedrock decides a search strategy for you. If you're using an Amazon OpenSearch Serverless vector store that contains a filterable text field, you can specify whether to query the knowledge base with a HYBRID search using both vector embeddings and raw text, or SEMANTIC search using only vector embeddings. For other vector store configurations, only SEMANTIC search is available. For more information, see Test a knowledge base.
-
-Type: String
-
-Valid Values: HYBRID | SEMANTIC
-
-Required: No
-```
 
