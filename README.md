@@ -532,7 +532,7 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
 
 ### LLM으로 RAG Grading 활용하기
 
-LLM의 관련된 문서의 숫자와 길이가 적다면 문서의 순서가 크게 영향을 주지 않습니다. 여기에서는 LLM으로 간단히 grading함으로써 RAG의 성능을 향상시키는 방법을 사용하고 있습니다. [LLM으로 RAG Grading 활용하기](./RAG-grading.md)에서는 prompt와 structured output을 이용하는 방법을 설명합니다.
+LLM의 관련된 문서의 숫자와 길이가 적다면 문서의 순서가 크게 영향을 주지 않습니다. 여기에서는 LLM으로 간단히 grading함으로써 RAG의 성능을 향상시키는 방법을 사용하고 있습니다. [LLM으로 RAG Grading 활용하기](https://github.com/kyopark2014/korean-chatbot-using-amazon-bedrock/blob/main/RAG-grading.md)에서는 prompt와 structured output을 이용하는 방법을 설명합니다.
 
 ## 직접 실습 해보기
 
