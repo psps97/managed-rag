@@ -1154,13 +1154,13 @@ def get_reference(docs):
                            
     return reference
 
-def get_reference_from_knoweledge_base(docs, path, doc_prefix):
+def get_reference_from_knoweledge_base(relevent_docs, path, doc_prefix):
     #print('path: ', path)
     #print('doc_prefix: ', doc_prefix)
     #print('prefix: ', f"/{doc_prefix}")
     
     docs = []
-    for i, document in enumerate(docs):
+    for i, document in enumerate(relevent_docs):
         content = ""
         if document.page_content:
             content = document.page_content
