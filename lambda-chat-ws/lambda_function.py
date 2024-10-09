@@ -1604,6 +1604,9 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
 
     filtered_docs = grade_documents(text, relevant_docs)
+    
+    # duplication checker
+    filtered_docs = check_duplication(filtered_docs)
             
     relevant_context = ""
     for i, document in enumerate(filtered_docs):
@@ -1806,6 +1809,9 @@ def search_by_tavily(keyword: str) -> str:
         
         filtered_docs = grade_documents(keyword, docs)
         
+        # duplication checker
+        filtered_docs = check_duplication(filtered_docs)
+        
     relevant_context = ""
     for i, document in enumerate(filtered_docs):
         print(f"{i}: {document}")
@@ -1860,6 +1866,9 @@ def search_by_knowledge_base(keyword: str) -> str:
         #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
 
     filtered_docs = grade_documents(keyword, relevant_docs)
+    
+    # duplication checker
+    filtered_docs = check_duplication(filtered_docs)
             
     relevant_context = ""
     for i, document in enumerate(filtered_docs):
@@ -1873,7 +1882,7 @@ def search_by_knowledge_base(keyword: str) -> str:
     if len(filtered_docs):
         reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)
         
-    print('reference_docs: ', reference_docs)
+    # print('reference_docs: ', reference_docs)
         
     return relevant_context
 
@@ -1969,12 +1978,30 @@ def run_agent_executor(connectionId, requestId, query):
 
     msg = readStreamMsg(connectionId, requestId, message.content)
     
-    print('reference_docs: ', reference_docs)
-
-    #return msg[msg.find('<result>')+8:len(msg)-9]
+    # print('reference_docs: ', reference_docs)
     return msg
 
 #########################################################
+contentList = []
+def check_duplication(docs):
+    global contentList
+    length_original = len(docs)
+    
+    updated_docs = []
+    print('length of relevant_docs:', len(docs))
+    for doc in docs:            
+        # print('excerpt: ', doc['metadata']['excerpt'])
+            if doc.page_content in contentList:
+                print('duplicated!')
+                continue
+            contentList.append(doc.page_content)
+            updated_docs.append(doc)            
+    length_updateed_docs = len(updated_docs)     
+    
+    if length_original == length_updateed_docs:
+        print('no duplication')
+    
+    return updated_docs
 
 def get_references(docs):
     reference = "\n\nFrom\n"
@@ -2041,8 +2068,9 @@ def getResponse(connectionId, jsonBody):
         multi_region = jsonBody['multi_region']
     print('multi_region: ', multi_region)
     
-    global reference_docs
+    global reference_docs, contentList
     reference_docs = []
+    contentList = []
     
     global enableReference
     global map_chain, memory_chain, debugMessageMode
