@@ -124,3 +124,16 @@ lexical query result:
 ```
 
 따라서, 별로도 OpenSearch에 입력하여야만 keyword 검색이 가능합니다.
+
+
+```text
+overrideSearchType
+By default, Amazon Bedrock decides a search strategy for you. If you're using an Amazon OpenSearch Serverless vector store that contains a filterable text field, you can specify whether to query the knowledge base with a HYBRID search using both vector embeddings and raw text, or SEMANTIC search using only vector embeddings. For other vector store configurations, only SEMANTIC search is available. For more information, see Test a knowledge base.
+
+Type: String
+
+Valid Values: HYBRID | SEMANTIC
+
+Required: No
+```
+
