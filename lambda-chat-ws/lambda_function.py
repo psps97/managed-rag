@@ -1154,18 +1154,20 @@ def get_reference(docs):
                            
     return reference
 
-def get_reference_of_knoweledge_base(docs, path, doc_prefix):
+def get_reference_from_knoweledge_base(docs, path, doc_prefix):
     reference = "\n\nFrom\n"
     #print('path: ', path)
     #print('doc_prefix: ', doc_prefix)
     #print('prefix: ', f"/{doc_prefix}")
     
+    docs = []
     for i, document in enumerate(docs):
+        content = ""
         if document.page_content:
-            excerpt = document.page_content
+            content = document.page_content
         
-        score = document.metadata["score"]
-        # print('score:', score)
+        score = document.metadata["score"]        
+        print(f"{i}: {content}, score: {score}")
         
         link = ""
         if "s3Location" in document.metadata["location"]:
@@ -1180,14 +1182,23 @@ def get_reference_of_knoweledge_base(docs, path, doc_prefix):
             
         elif "webLocation" in document.metadata["location"]:
             link = document.metadata["location"]["webLocation"]["url"] if document.metadata["location"]["webLocation"]["url"] is not None else ""
-            name = "WWW"
+            name = "WEB"
 
         url = link
         # print('url:', url)
+        
+        docs.append(
+            Document(
+                page_content=content,
+                metadata={
+                    'name': name,
+                    'url': url,
+                    'from': 'RAG'
+                },
+            )
+        )
                     
-        reference = reference + f"{i+1}. <a href={url} target=_blank>{name}</a>, <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
-                    
-    return reference
+    return docs
     
 # get auth
 region = os.environ.get('AWS_REGION', 'us-west-2')
@@ -1567,6 +1578,8 @@ def print_doc(i, doc):
     print(f"{i}: {text}, metadata:{doc.metadata}")
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
+    global reference_docs
+    
     msg = reference = ""
     top_k = 4
     relevant_docs = []
@@ -1606,9 +1619,9 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     msg = query_using_RAG_context(connectionId, requestId, chat, relevant_context, text)
     
     if len(filtered_docs):
-        reference = get_reference_of_knoweledge_base(filtered_docs, path, doc_prefix)  
+        reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)  
             
-    return msg, reference
+    return msg
     
 def traslation(chat, text, input_language, output_language):
     system = (
@@ -1808,13 +1821,13 @@ def search_by_tavily(keyword: str) -> str:
     return relevant_context
 
 @tool    
-def search_by_opensearch(keyword: str) -> str:
+def search_by_knowledge_base(keyword: str) -> str:
     """
     Search technical information by keyword and then return the result as a string.
     keyword: search keyword
     return: the technical information of keyword
     """    
-    print("###### search_by_opensearch ######")
+    print("###### search_by_knowledge_base ######")
     
     global reference_docs
     
@@ -1857,14 +1870,15 @@ def search_by_opensearch(keyword: str) -> str:
             
         relevant_context = relevant_context + content + "\n\n"        
     print('relevant_context: ', relevant_context)
-        
-    reference_docs += filtered_docs
+    
+    if len(filtered_docs):
+        reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)
         
     return relevant_context
 
 def run_agent_executor(connectionId, requestId, query):
     chatModel = get_chat() 
-    tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_opensearch]        
+    tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_knowledge_base]        
 
     model = chatModel.bind_tools(tools)
 
@@ -1959,7 +1973,7 @@ def run_agent_executor(connectionId, requestId, query):
 
 #########################################################
 
-def get_references_for_agent(docs):
+def get_references(docs):
     reference = "\n\nFrom\n"
     for i, doc in enumerate(docs):
         page = ""
@@ -1978,11 +1992,6 @@ def get_references_for_agent(docs):
         sourceType = ""
         if "from" in doc.metadata:
             sourceType = doc.metadata['from']
-        else:
-            if useEnhancedSearch:
-                sourceType = "OpenSearch"
-            else:
-                sourceType = "WWW"
         #print('sourceType: ', sourceType)        
         
         #if len(doc.page_content)>=1000:
@@ -2122,7 +2131,7 @@ def getResponse(connectionId, jsonBody):
                     
                 elif conv_type == 'qa-knowledge-base':   # RAG - Vector
                     print(f'rag_type: {rag_type}')
-                    msg, reference = get_answer_using_knowledge_base(chat, text, connectionId, requestId)
+                    msg = get_answer_using_knowledge_base(chat, text, connectionId, requestId)
                 
                 elif conv_type == 'agent-executor':
                     msg = run_agent_executor(connectionId, requestId, text)
@@ -2142,7 +2151,7 @@ def getResponse(connectionId, jsonBody):
                 memory_chain.chat_memory.add_ai_message(msg)
                 
                 if reference_docs:
-                    reference = get_references_for_agent(reference_docs)
+                    reference = get_references(reference_docs)
                         
         elif type == 'document':
             isTyping(connectionId, requestId)
