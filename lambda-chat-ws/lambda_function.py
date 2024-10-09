@@ -2170,7 +2170,7 @@ def getResponse(connectionId, jsonBody):
                 elif conv_type == 'agent-executor-chat':
                     revised_question = revise_question(connectionId, requestId, chat, text)     
                     print('revised_question: ', revised_question)  
-                    msg = run_agent_executor(connectionId, requestId, text)
+                    msg = run_agent_executor(connectionId, requestId, revised_question)
                                     
                 # token counter
                 if debugMessageMode=='true':
