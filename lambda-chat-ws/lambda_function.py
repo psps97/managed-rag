@@ -1880,10 +1880,14 @@ def run_agent_executor(connectionId, requestId, query):
         # print('(should_continue) messages: ', messages)
         
         last_message = messages[-1]
+                
         if not last_message.tool_calls:
-            return "end"
-        else:                
-            return "continue"
+            next = "end"
+        else:           
+            next = "continue"     
+        
+        print(f"should_continue: {next}")
+        return next
 
     def call_model(state: State):
         print("###### call_model ######")
