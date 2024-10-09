@@ -1281,7 +1281,7 @@ def initiate_knowledge_base():
                     's3Configuration': {
                         'bucketArn': s3_arn,
                         'inclusionPrefixes': [ 
-                            s3_prefix,
+                            s3_prefix+'/',
                         ]
                     },
                     'type': 'S3'
@@ -1451,7 +1451,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
             knowledge_base_id=knowledge_base_id, 
             retrieval_config={"vectorSearchConfiguration": {
                 "numberOfResults": top_k,
-                "overrideSearchType": "HYBRID"
+                "overrideSearchType": "HYBRID"   # SEMANTIC
             }},
         )
         
