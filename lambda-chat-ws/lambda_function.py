@@ -1456,7 +1456,10 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         )
         
         relevant_docs = retriever.invoke(text)
-        print('relevant_docs: ', relevant_docs)
+        # print('relevant_docs: ', relevant_docs)
+        print('--> relevant_docs for knowledge base')
+        for i, doc in enumerate(relevant_docs):
+            print_doc(i, doc)
         
         #selected_relevant_docs = []
         #if len(relevant_docs)>=1:
