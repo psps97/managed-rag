@@ -354,7 +354,7 @@ if not data_source_id:
                 's3Configuration': {
                     'bucketArn': s3_arn,
                     'inclusionPrefixes': [ 
-                        s3_prefix,
+                        s3_prefix+'/',
                     ]
                 },
                 'type': 'S3'
