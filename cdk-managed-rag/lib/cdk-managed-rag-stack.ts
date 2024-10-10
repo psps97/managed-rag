@@ -264,8 +264,9 @@ export class CdkManagedRagStack extends cdk.Stack {
       description: 'The endpoint of opensearch correction',
     });
 
+    const encPolicyName = `encription-${projectName}`
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
-      name: `encription-policy`,
+      name: encPolicyName,
       type: "encryption",
       description: `opensearch encryption policy for ${projectName}`,
       policy:
@@ -273,8 +274,9 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(encPolicy);
 
+    const netPolicyName = `network-${projectName}`
     const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
-      name: `network-policy`,
+      name: netPolicyName,
       type: 'network',    
       description: `opensearch network policy for ${projectName}`,
       policy: JSON.stringify([
@@ -292,8 +294,9 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
     OpenSearchCollection.addDependency(netPolicy);
 
+    const dataAccessPolicyName = `data-${projectName}`
     const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
-      name: `data-collection-policy`,
+      name: dataAccessPolicyName,
       type: "data",
       policy: JSON.stringify([
         {
