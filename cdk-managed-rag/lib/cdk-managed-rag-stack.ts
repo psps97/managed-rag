@@ -265,7 +265,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     });
 
     const encPolicyName = `encription-${projectName}`
-    const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
+    const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy-for-${projectName}`, {
       name: encPolicyName,
       type: "encryption",
       description: `opensearch encryption policy for ${projectName}`,
@@ -275,7 +275,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     OpenSearchCollection.addDependency(encPolicy);
 
     const netPolicyName = `network-${projectName}`
-    const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
+    const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy-for-${projectName}`, {
       name: netPolicyName,
       type: 'network',    
       description: `opensearch network policy for ${projectName}`,
