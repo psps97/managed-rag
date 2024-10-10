@@ -283,8 +283,12 @@ export class CdkManagedRagStack extends cdk.Stack {
         {
           Rules: [
             {
+              ResourceType: "dashboard",
+              Resource: [`collection/${netPolicyName}`],
+            },
+            {
               ResourceType: "collection",
-              Resource: ["collection/*"],              
+              Resource: [`collection/${netPolicyName}`],              
             }
           ],
           AllowFromPublic: true,          
