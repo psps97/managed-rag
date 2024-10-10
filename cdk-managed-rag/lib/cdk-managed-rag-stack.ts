@@ -288,7 +288,7 @@ export class CdkManagedRagStack extends cdk.Stack {
             },
             {
               ResourceType: "collection",
-              Resource: [`collection/${netPolicyName}`],              
+              Resource: [`collection/*`],              
             }
           ],
           AllowFromPublic: true,          
