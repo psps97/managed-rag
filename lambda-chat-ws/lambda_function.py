@@ -1302,7 +1302,7 @@ def initiate_knowledge_base():
                 }
             }
         }
-            
+
         try: # create index
             response = os_client.indices.create(
                 vectorIndexName,
