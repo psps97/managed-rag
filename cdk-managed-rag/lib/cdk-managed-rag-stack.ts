@@ -168,7 +168,7 @@ const titan_embedding_v2 = [  // dimension = 1024
 const LLM_for_chat = claude3_sonnet;
 const LLM_for_multimodal = claude3_sonnet;
 const LLM_embedding = titan_embedding_v2;
-const vectorIndexName = `knowledge-base-index-for-${projectName}`
+const vectorIndexName = projectName
 
 export class CdkManagedRagStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -249,7 +249,7 @@ export class CdkManagedRagStack extends cdk.Stack {
     );  
 
     // OpenSearch Serverless
-    const collectionName = projectName
+    const collectionName = vectorIndexName
     const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opensearch-correction-for-${projectName}`, {
       name: collectionName,    
       description: `opensearch correction for ${projectName}`,
