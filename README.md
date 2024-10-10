@@ -103,18 +103,20 @@ const OpenSearchCollection = new opensearchserverless.CfnCollection(this, `opens
 });
       
 const collectionArn = OpenSearchCollection.attrArn
-const opensearch_url = OpenSearchCollection.attrCollectionEndpoint  
+const opensearch_url = OpenSearchCollection.attrCollectionEndpoint
+const encPolicyName = `encription-${projectName}`
 const encPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-encription-security-policy`, {
-    name: `encription-policy`,
+    name: encPolicyName,
     type: "encryption",
     description: `opensearch encryption policy for ${projectName}`,
     policy:
         '{"Rules":[{"ResourceType":"collection","Resource":["collection/*"]}],"AWSOwnedKey":true}',      
 });
 OpenSearchCollection.addDependency(encPolicy);
-  
+
+const netPolicyName = `network-${projectName}`
 const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-network-security-policy`, {
-    name: `network-policy`,
+    name: netPolicyName,
     type: 'network',    
     description: `opensearch network policy for ${projectName}`,
     policy: JSON.stringify([
@@ -130,9 +132,10 @@ const netPolicy = new opensearchserverless.CfnSecurityPolicy(this, `opensearch-n
     ]),         
 });
 OpenSearchCollection.addDependency(netPolicy);
-  
+
+const dataAccessPolicyName = `data-${projectName}`
 const dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, `opensearch-data-collection-policy-for-${projectName}`, {
-    name: `data-collection-policy`,
+    name: dataAccessPolicyName,
     type: "data",
     policy: JSON.stringify([
         {
