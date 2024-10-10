@@ -151,7 +151,7 @@ def load_secrets():
         get_tavily_api_secret = secretsmanager.get_secret_value(
             SecretId=f"tavilyapikey-{projectName}"
         )
-        #print('get_tavily_api_secret: ', get_tavily_api_secret)
+        print('get_tavily_api_secret: ', get_tavily_api_secret)
         
         if get_tavily_api_secret['SecretString']:
             secret = json.loads(get_tavily_api_secret['SecretString'])
