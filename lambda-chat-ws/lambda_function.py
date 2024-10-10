@@ -133,7 +133,7 @@ def load_secrets():
         )
         # print('get_langsmith_api_secret: ', get_langsmith_api_secret)
         
-        if 'SecretString' in get_langsmith_api_secret:
+        if get_langsmith_api_secret['SecretString']:
             secret = json.loads(get_langsmith_api_secret['SecretString'])
             #print('secret: ', secret)
             langsmith_api_key = secret['langsmith_api_key']
@@ -153,7 +153,7 @@ def load_secrets():
         )
         #print('get_tavily_api_secret: ', get_tavily_api_secret)
         
-        if 'SecretString' in get_tavily_api_secret:
+        if get_tavily_api_secret['SecretString']:
             secret = json.loads(get_tavily_api_secret['SecretString'])
             # print('secret: ', secret)
             tavily_api_key = json.loads(secret['tavily_api_key'])
@@ -167,7 +167,7 @@ def load_secrets():
         )
         #print('get_weather_api_secret: ', get_weather_api_secret)
         
-        if 'SecretString' in get_weather_api_secret:
+        if get_weather_api_secret['SecretString']:
             secret = json.loads(get_weather_api_secret['SecretString'])
             #print('secret: ', secret)
             weather_api_key = secret['weather_api_key']
