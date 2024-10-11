@@ -32,14 +32,10 @@ const enableReference = 'true';
 const debugMessageMode = 'false'; // if true, debug messages will be delivered to the client.
 const useParallelRAG = 'true';
 const numberOfRelevantDocs = '6';
-const supportedFormat = JSON.stringify(["pdf", "txt", "csv", "pptx", "ppt", "docx", "doc", "xlsx", "py", "js", "md", 'png', 'jpeg', 'jpg']);  
 
-const max_object_size = 102400000; // 100 MB max size of an object, 50MB(default)
-const enableHybridSearch = 'true';
-const enalbeParentDocumentRetrival = 'true';
-const knowledge_base_name = `knowledge-base-for-${projectName}-${region}`
-const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`
-const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`
+const knowledge_base_name = projectName;
+const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`;
+const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`;
 
 const claude3_5_sonnet = [
   {
