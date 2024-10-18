@@ -343,9 +343,17 @@ map_chain = dict()
 
 def get_chat():
     global selected_chat
-    profile = LLM_for_chat[selected_chat]
+    
+    if multi_region == 'enable':
+        length_of_models = len(multi_region_models)
+        profile = multi_region_models[selected_chat]
+    else:
+        length_of_models = len(LLM_for_chat)
+        profile = LLM_for_chat[selected_chat]
+        
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
+    maxOutputTokens = 4096
     print(f'LLM: {selected_chat}, bedrock_region: {bedrock_region}, modelId: {modelId}')
                           
     # bedrock   
@@ -374,7 +382,7 @@ def get_chat():
     )    
     
     selected_chat = selected_chat + 1
-    if selected_chat == len(LLM_for_chat):
+    if selected_chat == length_of_models:
         selected_chat = 0
     
     return chat
