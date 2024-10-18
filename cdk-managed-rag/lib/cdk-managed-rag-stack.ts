@@ -43,50 +43,12 @@ const claude3_5_sonnet = [
     "model_type": "claude3.5",
     "max_tokens": 4096,
     "model_id": "anthropic.claude-3-5-sonnet-20240620-v1:0"
-  },
-  {
-    "bedrock_region": "us-east-1", // N.Virginia
-    "model_type": "claude3.5",
-    "max_tokens": 4096,
-    "model_id": "anthropic.claude-3-5-sonnet-20240620-v1:0"
-  },
-  {
-    "bedrock_region": "eu-central-1", // Frankfurt
-    "model_type": "claude3.5",
-    "max_tokens": 4096,
-    "model_id": "anthropic.claude-3-5-sonnet-20240620-v1:0"
-  },
-  {
-    "bedrock_region": "ap-northeast-1", // Tokyo
-    "model_type": "claude3.5",
-    "max_tokens": 4096,
-    "model_id": "anthropic.claude-3-5-sonnet-20240620-v1:0"
   }
 ];
 
 const claude3_sonnet = [
   {
     "bedrock_region": "us-west-2", // Oregon
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
-  },
-  {
-    "bedrock_region": "us-east-1", // N.Virginia
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
-  },
-  {
-    "bedrock_region": "ca-central-1", // Canada
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
-  },
-  {
-    "bedrock_region": "eu-west-2", // London
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
-  },
-  {
-    "bedrock_region": "sa-east-1", // Sao Paulo
     "model_type": "claude3",
     "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
   }
@@ -97,26 +59,6 @@ const claude3_haiku = [
     "bedrock_region": "us-west-2", // Oregon
     "model_type": "claude3",
     "model_id": "anthropic.claude-3-haiku-20240307-v1:0"
-  },
-  {
-    "bedrock_region": "us-east-1", // N.Virginia
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-haiku-20240307-v1:0"
-  },
-  {
-    "bedrock_region": "ca-central-1", // Canada
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-haiku-20240307-v1:0"
-  },
-  {
-    "bedrock_region": "eu-west-2", // London
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-haiku-20240307-v1:0"
-  },
-  {
-    "bedrock_region": "sa-east-1", // Sao Paulo
-    "model_type": "claude3",
-    "model_id": "anthropic.claude-3-haiku-20240307-v1:0"
   }
 ];
 
@@ -125,37 +67,12 @@ const titan_embedding_v1 = [  // dimension = 1536
     "bedrock_region": "us-west-2", // Oregon
     "model_type": "titan",
     "model_id": "amazon.titan-embed-text-v1"
-  },
-  {
-    "bedrock_region": "us-east-1", // N.Virginia
-    "model_type": "titan",
-    "model_id": "amazon.titan-embed-text-v1"
   }
 ];
 
 const titan_embedding_v2 = [  // dimension = 1024
   {
     "bedrock_region": "us-west-2", // Oregon
-    "model_type": "titan",
-    "model_id": "amazon.titan-embed-text-v2:0"
-  },
-  {
-    "bedrock_region": "us-east-1", // N.Virginia
-    "model_type": "titan",
-    "model_id": "amazon.titan-embed-text-v2:0"
-  },
-  {
-    "bedrock_region": "ca-central-1", // Canada
-    "model_type": "titan",
-    "model_id": "amazon.titan-embed-text-v2:0"
-  },
-  {
-    "bedrock_region": "eu-west-2", // London
-    "model_type": "titan",
-    "model_id": "amazon.titan-embed-text-v2:0"
-  },
-  {
-    "bedrock_region": "sa-east-1", // Sao Paulo
     "model_type": "titan",
     "model_id": "amazon.titan-embed-text-v2:0"
   }
@@ -797,9 +714,9 @@ export class CdkManagedRagStack extends cdk.Stack {
         debugMessageMode: debugMessageMode,
         useParallelRAG: useParallelRAG,
         numberOfRelevantDocs: numberOfRelevantDocs,
-        LLM_for_chat: JSON.stringify(claude3_sonnet),          
-        LLM_for_multimodal: JSON.stringify(claude3_sonnet),          
-        LLM_embedding: JSON.stringify(titan_embedding_v2),
+        LLM_for_chat: JSON.stringify(LLM_for_chat),          
+        LLM_for_multimodal: JSON.stringify(LLM_for_multimodal),          
+        LLM_embedding: JSON.stringify(LLM_embedding),
         priorty_search_embedding: JSON.stringify(titan_embedding_v1),
         projectName: projectName,
         knowledge_base_name: knowledge_base_name,
