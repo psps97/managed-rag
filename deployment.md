@@ -2,7 +2,7 @@
 
 ## 모델 사용 권한 설정하기
 
-여기서는 Multi-Region LLM을 사용하기 위하여, 아래 링크에 접속하여, [Edit]를 선택한 후에 모든 모델을 사용할 수 있도록 설정합니다. 특히 Anthropic Claude와 "Titan Embeddings G1 - Text"은 LLM 및 Vector Embedding을 위해서 반드시 사용이 가능하여야 합니다.
+여기서는 Multi-Region LLM을 사용하기 위하여, 아래 링크에 접속하여, [Edit]를 선택한 후에 모든 모델을 사용할 수 있도록 설정합니다. 특히 Anthropic Claude와 "Titan Embeddings V2 - Text"은 LLM 및 Vector Embedding을 위해서 반드시 사용이 가능하여야 합니다.
 
 - [Model access - Oregon](https://us-west-2.console.aws.amazon.com/bedrock/home?region=us-west-2#/modelaccess)
 - [Model access - N.Virginia](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess)
