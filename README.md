@@ -6,7 +6,10 @@
 </p>
 
 
-여기에서는 완전관리형 RAG(Fully Managed RAG)를 이용하여 편리하게 RAG를 구성하는 방법을 설명합니다.
+여기에서는 완전관리형 RAG(Fully Managed RAG)를 이용하여 편리하게 RAG를 구성하는 방법을 설명합니다. 전체적인 architecture는 아래와 같습니다. 여기에서는 변화하는 트래픽을 쉽게 관리하고 및 유지보수등이 용이한 serverless architecture를 이용합니다. 지식 저장소(knowledge store)로는 OpenSearch serverless를 활용하는 Amazon Bedrock Knowledge Base를 이용합니다. 
+
+![image](https://github.com/user-attachments/assets/b3a93dc6-110b-4cce-aad1-d8a92f957d93)
+
 
 ## 구현 주요 내용
 
