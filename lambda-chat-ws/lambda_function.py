@@ -495,7 +495,7 @@ def sendMessage(id, body):
     except Exception:
         err_msg = traceback.format_exc()
         print('err_msg: ', err_msg)
-        raise Exception ("Not able to send a message")
+        # raise Exception ("Not able to send a message")
 
 def sendResultMessage(connectionId, requestId, msg):    
     result = {
@@ -1945,7 +1945,7 @@ def run_agent_executor(connectionId, requestId, query):
         print(f"should_continue response: {next}")
         return next
 
-    def call_model(state: State):
+    def call_model(state: State, config):
         print("###### call_model ######")
         # print('state: ', state["messages"])
         
