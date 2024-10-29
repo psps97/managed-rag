@@ -563,7 +563,7 @@ def general_conversation(connectionId, requestId, chat, query):
                 
     chain = prompt | chat    
     try: 
-        isTyping(connectionId, requestId)  
+        isTyping(connectionId, requestId, "")  
         stream = chain.invoke(
             {
                 "history": history,
@@ -664,7 +664,7 @@ def generate_code(connectionId, requestId, chat, text, context, mode):
     
     chain = prompt | chat    
     try: 
-        isTyping(connectionId, requestId)  
+        isTyping(connectionId, requestId, "")  
         stream = chain.invoke(
             {
                 "context": context,
@@ -722,6 +722,8 @@ def summary_of_code(chat, code, mode):
 def revise_question(connectionId, requestId, chat, query):    
     global history_length, token_counter_history    
     history_length = token_counter_history = 0
+    
+    isTyping(connectionId, requestId, "revising...")
         
     if isKorean(query)==True :      
         system = (
@@ -791,6 +793,8 @@ def revise_question(connectionId, requestId, chat, query):
     # return revised_question.replace("\n"," ")
 
 def query_using_RAG_context(connectionId, requestId, chat, context, revised_question):    
+    isTyping(connectionId, requestId, "generating...")  
+    
     if isKorean(revised_question)==True:
         system = (
             """다음의 <context> tag안의 참고자료를 이용하여 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다. Assistant의 이름은 서연이고, 모르는 질문을 받으면 솔직히 모른다고 말합니다.
@@ -816,7 +820,7 @@ def query_using_RAG_context(connectionId, requestId, chat, context, revised_ques
     chain = prompt | chat
     
     try: 
-        isTyping(connectionId, requestId)  
+        isTyping(connectionId, requestId, "")  
         stream = chain.invoke(
             {
                 "context": context,
@@ -1026,10 +1030,12 @@ def getAllowTime():
 
     return timeStr
 
-def isTyping(connectionId, requestId):    
+def isTyping(connectionId, requestId, msg):    
+    if not msg:
+        msg = "typing a message..."
     msg_proceeding = {
         'request_id': requestId,
-        'msg': 'Proceeding...',
+        'msg': msg,
         'status': 'istyping'
     }
     #print('result: ', json.dumps(result))
@@ -1596,6 +1602,8 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     top_k = 4
     relevant_docs = []
     if knowledge_base_id:    
+        isTyping(connectionId, requestId, "retrieving...")
+        
         retriever = AmazonKnowledgeBasesRetriever(
             knowledge_base_id=knowledge_base_id, 
             retrieval_config={"vectorSearchConfiguration": {
@@ -1616,6 +1624,8 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
         #    selected_relevant_docs = priority_search(revised_question, relevant_docs, minDocSimilarity)
         #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
 
+    isTyping(connectionId, requestId, "grading...")
+    
     filtered_docs = grade_documents(text, relevant_docs)
     
     # duplication checker
@@ -1902,7 +1912,7 @@ def search_by_knowledge_base(keyword: str) -> str:
 def run_agent_executor(connectionId, requestId, query):
     chatModel = get_chat() 
     tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_knowledge_base]
-
+    
     model = chatModel.bind_tools(tools)
 
     class State(TypedDict):
@@ -1910,6 +1920,15 @@ def run_agent_executor(connectionId, requestId, query):
         messages: Annotated[list, add_messages]
 
     tool_node = ToolNode(tools)
+    
+    def update_state_message(msg:str, config):
+        print(msg)
+        # print('config: ', config)
+        
+        requestId = config.get("configurable", {}).get("requestId", "")
+        connectionId = config.get("configurable", {}).get("connectionId", "")
+        
+        isTyping(connectionId, requestId, msg)
 
     def should_continue(state: State) -> Literal["continue", "end"]:
         print("###### should_continue ######")
@@ -1929,6 +1948,8 @@ def run_agent_executor(connectionId, requestId, query):
     def call_model(state: State):
         print("###### call_model ######")
         # print('state: ', state["messages"])
+        
+        update_state_message("thinking...", config)
         
         if isKorean(state["messages"][0].content)==True:
             system = (
@@ -1955,6 +1976,13 @@ def run_agent_executor(connectionId, requestId, query):
         response = chain.invoke(state["messages"])
         print('call_model response: ', response.tool_calls)
         
+        # state messag
+        if response.tool_calls:
+            toolinfo = response.tool_calls[-1]            
+            if toolinfo['type'] == 'tool_call':
+                print('tool name: ', toolinfo['name'])                    
+                update_state_message(f"calling... {toolinfo['name']}", config)
+        
         return {"messages": [response]}
 
     def buildChatAgent():
@@ -1977,10 +2005,14 @@ def run_agent_executor(connectionId, requestId, query):
 
     app = buildChatAgent()
         
-    isTyping(connectionId, requestId)
+    isTyping(connectionId, requestId, "")
     
     inputs = [HumanMessage(content=query)]
-    config = {"recursion_limit": 50}
+    config = {
+        "recursion_limit": 50,
+        "requestId": requestId,
+        "connectionId": connectionId
+    }
     
     message = ""
     for event in app.stream({"messages": inputs}, config, stream_mode="values"):   
@@ -2198,7 +2230,7 @@ def getResponse(connectionId, jsonBody):
                     reference = get_references(reference_docs)
                         
         elif type == 'document':
-            isTyping(connectionId, requestId)
+            isTyping(connectionId, requestId, "")
             
             object = body
             file_type = object[object.rfind('.')+1:len(object)]            
