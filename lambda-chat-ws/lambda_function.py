@@ -820,7 +820,7 @@ def query_using_RAG_context(connectionId, requestId, chat, context, revised_ques
     chain = prompt | chat
     
     try: 
-        isTyping(connectionId, requestId, "")  
+        isTyping(connectionId, requestId, "generating...") 
         stream = chain.invoke(
             {
                 "context": context,
