@@ -594,10 +594,9 @@ def call_model(state: State, config):
     
     if isKorean(state["messages"][0].content)==True:
         system = (
-            "당신의 이름은 서연이고, 질문에 친근한 방식으로 대답하도록 설계된 대화형 AI입니다."
+            "질문에 친근한 방식으로 대답하도록 설계된 대화형 AI입니다."
             "상황에 맞는 구체적인 세부 정보를 충분히 제공합니다."
             "모르는 질문을 받으면 솔직히 모른다고 말합니다."
-            "최종 답변에는 조사한 내용을 반드시 포함합니다."
         )
     else: 
         system = (            
