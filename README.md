@@ -535,7 +535,7 @@ def search_by_knowledge_base(keyword: str) -> str:
     return relevant_context
 ```
 
-### Agentic Workflow의 활용
+### Agentic Workflow의 구현
 
 여기에서는 agectic workflow의 tool use 패턴을 이용하여 knowledge base로 구성한 RAG의 정보를 조회하여 활용합니다. 아래와 같이 Workflow를 정의합니다.
 
