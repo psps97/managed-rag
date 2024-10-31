@@ -258,6 +258,7 @@ if(is_not_exist(vectorIndexName)):
 Knowledge base가 이미 생성되어 있는지 확인하기 위하여 boto3의 [list_knowledge_bases](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agent/client/list_knowledge_bases.html)으로 현재의 knowledge base의 리스트를 확인합니다. 
             
 ```python
+knowledge_base_name = projectName
 try: 
     client = boto3.client('bedrock-agent')         
     response = client.list_knowledge_bases(
@@ -431,6 +432,7 @@ Knowledbe base에서 관련된 문서를 조회하기 위해서 [AmazonKnowledge
 from langchain_aws import AmazonKnowledgeBasesRetriever
 
 knowledge_base_id = None
+knowledge_base_name = projectName 
 def retrieve_from_knowledge_base(query):
     global knowledge_base_id
     if not knowledge_base_id:        
