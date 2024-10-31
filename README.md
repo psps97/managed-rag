@@ -497,7 +497,140 @@ def retrieve_from_knowledge_base(query):
     return docs
 ```
 
+### Knowlodge Base 조회하는 기능을 Tool로 등록하기
 
+Knowledge Base를 조회하는 함수를 Tool로 등록하여 agent에서 tool use 패턴으로 활용합니다. 이를 위해 아래와 같이 tool로 등록할때 검색조건을 "Search technical information by keyword"로 설정합니다. 이때, numberOfResults 수만큼 검색합니다.
+
+```python
+@tool    
+def search_by_knowledge_base(keyword: str) -> str:
+    """
+    Search technical information by keyword and then return the result as a string.
+    keyword: search keyword
+    return: the technical information of keyword
+    """    
+    print("###### search_by_knowledge_base ######")
+    
+    top_k = 4
+    relevant_docs = []
+    if knowledge_base_id:    
+        retriever = AmazonKnowledgeBasesRetriever(
+            knowledge_base_id=knowledge_base_id, 
+            retrieval_config={"vectorSearchConfiguration": {
+                "numberOfResults": top_k,
+                "overrideSearchType": "HYBRID"   # SEMANTIC
+            }},
+        )        
+        relevant_docs = retriever.invoke(keyword)
+        
+    filtered_docs = grade_documents(keyword, relevant_docs)
+    filtered_docs = check_duplication(filtered_docs)  # duplication checker
+            
+    relevant_context = ""
+    for i, document in enumerate(filtered_docs):
+        if document.page_content:
+            content = document.page_content            
+        relevant_context = relevant_context + content + "\n\n"        
+    
+    return relevant_context
+```
+
+### Agentic Workflow의 활용
+
+여기에서는 agectic workflow의 tool use 패턴을 이용하여 knowledge base로 구성한 RAG의 정보를 조회하여 활용합니다. 아래와 같이 Workflow를 정의합니다.
+
+```python
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+workflow = StateGraph(State)
+
+workflow.add_node("agent", call_model)
+workflow.add_node("action", tool_node)
+workflow.add_edge(START, "agent")
+workflow.add_conditional_edges(
+    "agent",
+    should_continue,
+    {
+        "continue": "action",
+        "end": END,
+    },
+)
+workflow.add_edge("action", "agent")
+
+app = workflow.compile()
+```
+
+아래와 같이 실행합니다. 
+
+```python
+inputs = [HumanMessage(content=query)]
+config = {
+    "recursion_limit": 50,
+    "requestId": requestId,
+    "connectionId": connectionId
+}
+
+for event in app.stream({"messages": inputs}, config, stream_mode="values"):   
+    message = event["messages"][-1]
+```
+
+또한, search_by_knowledge_base을 포함한 tool들을 노드로 등록합니다.
+
+```python
+tools = [get_current_time, get_book_list, get_weather_info, search_by_tavily, search_by_knowledge_base]
+
+chatModel = get_chat()
+model = chatModel.bind_tools(tools)
+
+tool_node = ToolNode(tools)
+```
+
+이때의 agent의 call_model은 아래와 같습니다.
+
+```python
+def call_model(state: State, config):
+    update_state_message("thinking...", config)
+    
+    if isKorean(state["messages"][0].content)==True:
+        system = (
+            "당신의 이름은 서연이고, 질문에 친근한 방식으로 대답하도록 설계된 대화형 AI입니다."
+            "상황에 맞는 구체적인 세부 정보를 충분히 제공합니다."
+            "모르는 질문을 받으면 솔직히 모른다고 말합니다."
+            "최종 답변에는 조사한 내용을 반드시 포함합니다."
+        )
+    else: 
+        system = (            
+            "You are a conversational AI designed to answer in a friendly way to a question."
+            "If you don't know the answer, just say that you don't know, don't try to make up an answer."
+            "You will be acting as a thoughtful advisor."    
+        )
+        
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+    chain = prompt | model
+        
+    response = chain.invoke(state["messages"])    
+    return {"messages": [response]}
+```
+
+또한, workflow의 condtional edge는 아래와 같이 정의합니다.
+
+```python
+def should_continue(state: State) -> Literal["continue", "end"]:
+    messages = state["messages"]    
+    
+    last_message = messages[-1]            
+    if not last_message.tool_calls:
+        next = "end"
+    else:           
+        next = "continue"         
+    return next
+```
 
 
 ### 참고문헌 가져오기
