@@ -710,5 +710,5 @@ Knowledge Base를 활용하여 RAG를 적용할 때에 데이터의 등록 및 �
 2) [Cloud9 Console](https://us-west-2.console.aws.amazon.com/cloud9control/home?region=us-west-2#/)에 접속하여 아래의 명령어로 전체 삭제를 합니다.
 
 ```text
-cd ~/environment/langgraph-agent/cdk-langgraph-agent/ && cdk destroy --all
+cd ~/environment/managed-rag/cdk-managed-rag/ && cdk destroy --all
 ```
