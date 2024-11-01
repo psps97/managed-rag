@@ -2215,6 +2215,7 @@ def getResponse(connectionId, jsonBody):
         profile = LLM_for_chat[selected_chat]
         length_of_models = len(LLM_for_chat)
     
+    print('length_of_models: ', length_of_models)    
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
     print(f'selected_chat: {selected_chat}, bedrock_region: {bedrock_region}, modelId: {modelId}')
