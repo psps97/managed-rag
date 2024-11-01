@@ -342,7 +342,7 @@ AI_PROMPT = "\n\nAssistant:"
 map_chain = dict() 
 
 def get_chat():
-    global selected_chat
+    global selected_chat, length_of_models
     
     if multi_region == 'enable':
         length_of_models = len(multi_region_models)
@@ -350,6 +350,9 @@ def get_chat():
     else:
         length_of_models = len(LLM_for_chat)
         profile = LLM_for_chat[selected_chat]
+    
+    print('length_of_models: ', length_of_models)
+    print('profile: ', json.dumps(profile))
         
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
