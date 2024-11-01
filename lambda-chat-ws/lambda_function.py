@@ -67,6 +67,7 @@ selected_chat = 0
 selected_multimodal = 0
 selected_embedding = 0
 selected_ps_embedding = 0
+length_of_models = 1
 
 useParallelRAG = os.environ.get('useParallelRAG', 'true')
 roleArn = os.environ.get('roleArn')
@@ -345,11 +346,12 @@ def get_chat():
     global selected_chat
     
     if multi_region == 'enable':
-        length_of_models = len(multi_region_models)
         profile = multi_region_models[selected_chat]
     else:
-        length_of_models = len(LLM_for_chat)
         profile = LLM_for_chat[selected_chat]
+    
+    print('length_of_models: ', length_of_models)
+    print('profile: ', json.dumps(profile))
         
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
@@ -1535,7 +1537,7 @@ def grade_documents_using_parallel_processing(question, documents):
         processes.append(process)
 
         selected_chat = selected_chat + 1
-        if selected_chat == len(multi_region_models):
+        if selected_chat == length_of_models:
             selected_chat = 0
     for process in processes:
         process.start()
@@ -2205,7 +2207,20 @@ def getResponse(connectionId, jsonBody):
     global map_chain, memory_chain, debugMessageMode
                  
     # Multi-LLM
-    profile = LLM_for_chat[selected_chat]
+    global selected_chat, length_of_models
+    if multi_region == 'enable':
+        length_of_models = len(multi_region_models)
+        if selected_chat == length_of_models:
+            selected_chat = 0
+        profile = multi_region_models[selected_chat]
+        
+    else:
+        length_of_models = len(LLM_for_chat)
+        if selected_chat == length_of_models:
+            selected_chat = 0    
+        profile = LLM_for_chat[selected_chat]
+        
+    print('length_of_models: ', length_of_models)    
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
     print(f'selected_chat: {selected_chat}, bedrock_region: {bedrock_region}, modelId: {modelId}')
