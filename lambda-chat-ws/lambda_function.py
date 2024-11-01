@@ -2209,12 +2209,17 @@ def getResponse(connectionId, jsonBody):
     # Multi-LLM
     global length_of_models
     if multi_region == 'enable':
-        profile = multi_region_models[selected_chat]
         length_of_models = len(multi_region_models)
+        if selected_chat == length_of_models:
+            selected_chat = 0
+        profile = multi_region_models[selected_chat]
+        
     else:
-        profile = LLM_for_chat[selected_chat]
         length_of_models = len(LLM_for_chat)
-    
+        if selected_chat == length_of_models:
+            selected_chat = 0    
+        profile = LLM_for_chat[selected_chat]
+        
     print('length_of_models: ', length_of_models)    
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
