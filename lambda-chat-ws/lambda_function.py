@@ -67,6 +67,7 @@ selected_chat = 0
 selected_multimodal = 0
 selected_embedding = 0
 selected_ps_embedding = 0
+length_of_models = 1
 
 useParallelRAG = os.environ.get('useParallelRAG', 'true')
 roleArn = os.environ.get('roleArn')
@@ -1538,7 +1539,7 @@ def grade_documents_using_parallel_processing(question, documents):
         processes.append(process)
 
         selected_chat = selected_chat + 1
-        if selected_chat == len(multi_region_models):
+        if selected_chat == length_of_models:
             selected_chat = 0
     for process in processes:
         process.start()
