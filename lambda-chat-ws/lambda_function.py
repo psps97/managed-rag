@@ -71,13 +71,14 @@ length_of_models = 1
 
 useParallelRAG = os.environ.get('useParallelRAG', 'true')
 roleArn = os.environ.get('roleArn')
-top_k = int(os.environ.get('numberOfRelevantDocs', '8'))
+numberOfDocs = int(os.environ.get('numberOfRelevantDocs', '8'))
 MSG_LENGTH = 100
 MSG_HISTORY_LENGTH = 20
 speech_generation = True
 history_length = 0
 token_counter_history = 0
-
+grade_state = "LLM" # LLM, PRIORITY_SEARCH, OTHERS
+ 
 minDocSimilarity = 200
 projectName = os.environ.get('projectName')
 maxOutputTokens = 4096
@@ -1093,24 +1094,24 @@ def get_ps_embedding():
 def priority_search(query, relevant_docs, minSimilarity):
     excerpts = []
     for i, doc in enumerate(relevant_docs):
-        # print('doc: ', doc)
-        if 'translated_excerpt' in doc['metadata'] and doc['metadata']['translated_excerpt']:
-            content = doc['metadata']['translated_excerpt']
-        else:
-            content = doc['metadata']['excerpt']
-            
-        print('content: ', content)
-        
+        #print('doc: ', doc)
+
+        content = doc.page_content
+        # print('content: ', content)
+
         excerpts.append(
             Document(
                 page_content=content,
                 metadata={
-                    'name': doc['metadata']['title'],
+                    'name': doc.metadata['name'],
+                    'url': doc.metadata['url'],
+                    'from': doc.metadata['from'],
                     'order':i,
+                    'score':0
                 }
             )
-        )  
-    # print('excerpts: ', excerpts)
+        )
+    #print('excerpts: ', excerpts)
 
     embeddings = get_ps_embedding()
     vectorstore_confidence = FAISS.from_documents(
@@ -1119,61 +1120,26 @@ def priority_search(query, relevant_docs, minSimilarity):
     )            
     rel_documents = vectorstore_confidence.similarity_search_with_score(
         query=query,
-        # k=top_k
         k=len(relevant_docs)
     )
 
     docs = []
     for i, document in enumerate(rel_documents):
-        # print(f'## Document(priority_search) {i+1}: {document}')
+        print(f'## Document(priority_search) query: {query}, {i+1}: {document}')
 
         order = document[0].metadata['order']
         name = document[0].metadata['name']
-        assessed_score = document[1]
-        print(f"{order} {name}: {assessed_score}")
+        
+        score = document[1]
+        print(f"query: {query}, {order}: {name}, {score}")
 
-        relevant_docs[order]['assessed_score'] = int(assessed_score)
+        relevant_docs[order].metadata['score'] = int(score)
 
-        if assessed_score < minSimilarity:
+        if score < minSimilarity:
             docs.append(relevant_docs[order])    
     # print('selected docs: ', docs)
 
     return docs
-
-def get_reference(docs):
-    reference = "\n\nFrom\n"
-    for i, doc in enumerate(docs):
-        if doc['metadata']['translated_excerpt']:
-            excerpt = str(doc['metadata']['excerpt']+'  [번역]'+doc['metadata']['translated_excerpt']).replace('"',"") 
-        else:
-            excerpt = str(doc['metadata']['excerpt']).replace('"'," ")
-            
-        excerpt = excerpt.replace('\n','\\n')           
-                
-        if doc['rag_type'][:10] == 'opensearch':
-            #print(f'## Document(get_reference) {i+1}: {doc}')
-                
-            page = ""
-            if "document_attributes" in doc['metadata']:
-                if "_excerpt_page_number" in doc['metadata']['document_attributes']:
-                    page = doc['metadata']['document_attributes']['_excerpt_page_number']
-            uri = doc['metadata']['source']
-            name = doc['metadata']['title']
-            #print('opensearch page: ', page)
-
-            if page:                
-                reference = reference + f"{i+1}. {page}page in <a href={uri} target=_blank>{name}</a>, {doc['rag_type']} ({doc['assessed_score']})\n"
-            else:
-                reference = reference + f"{i+1}. <a href={uri} target=_blank>{name}</a>, {doc['rag_type']} ({doc['assessed_score']}), <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
-                    
-        elif doc['rag_type'] == 'search': # google search
-            # print(f'## Document(get_reference) {i+1}: {doc}')
-                
-            uri = doc['metadata']['source']
-            name = doc['metadata']['title']
-            reference = reference + f"{i+1}. <a href={uri} target=_blank>{name}</a>, {doc['rag_type']} ({doc['assessed_score']}), <a href=\"#\" onClick=\"alert(`{excerpt}`)\">관련문서</a>\n"
-                           
-    return reference
 
 def get_reference_from_knoweledge_base(relevent_docs, path, doc_prefix):
     #print('path: ', path)
@@ -1557,36 +1523,43 @@ def grade_documents_using_parallel_processing(question, documents):
 def grade_documents(question, documents):
     print("###### grade_documents ######")
     
-    filtered_docs = []
-    if multi_region == 'enable':  # parallel processing
-        print("start grading...")
-        filtered_docs = grade_documents_using_parallel_processing(question, documents)
-
-    else:
-        # Score each doc    
-        chat = get_chat()
-        retrieval_grader = get_retrieval_grader(chat)
-        for i, doc in enumerate(documents):
-            # print('doc: ', doc)
-            print_doc(i, doc)
-            
-            score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
-            # print("score: ", score)
-            
-            grade = score.binary_score
-            # print("grade: ", grade)
-            # Document relevant
-            if grade.lower() == "yes":
-                print("---GRADE: DOCUMENT RELEVANT---")
-                filtered_docs.append(doc)
-            # Document not relevant
-            else:
-                print("---GRADE: DOCUMENT NOT RELEVANT---")
-                # We do not include the document in filtered_docs
-                # We set a flag to indicate that we want to run web search
-                continue
+    print("start grading...")
+    print("grade_state: ", grade_state)
     
-    # print('len(docments): ', len(filtered_docs))    
+    if grade_state == "LLM":
+        filtered_docs = []
+        if multi_region == 'enable':  # parallel processing        
+            filtered_docs = grade_documents_using_parallel_processing(question, documents)
+
+        else:
+            # Score each doc    
+            chat = get_chat()
+            retrieval_grader = get_retrieval_grader(chat)
+            for i, doc in enumerate(documents):
+                # print('doc: ', doc)
+                print_doc(i, doc)
+                
+                score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
+                # print("score: ", score)
+                
+                grade = score.binary_score
+                # print("grade: ", grade)
+                # Document relevant
+                if grade.lower() == "yes":
+                    print("---GRADE: DOCUMENT RELEVANT---")
+                    filtered_docs.append(doc)
+                # Document not relevant
+                else:
+                    print("---GRADE: DOCUMENT NOT RELEVANT---")
+                    # We do not include the document in filtered_docs
+                    # We set a flag to indicate that we want to run web search
+                    continue
+    
+    elif grade_state == "PRIORITY_SEARCH":
+        filtered_docs = priority_search(question, documents, minDocSimilarity)
+    else:  # OTHERS
+        filtered_docs = documents
+
     return filtered_docs
 
 def print_doc(i, doc):
@@ -1601,7 +1574,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     global reference_docs
     
     msg = reference = ""
-    top_k = 4
+    top_k = numberOfDocs
     relevant_docs = []
     if knowledge_base_id:    
         isTyping(connectionId, requestId, "retrieving...")
@@ -1867,7 +1840,7 @@ def search_by_knowledge_base(keyword: str) -> str:
     keyword = keyword.replace('\n','')
     print('modified keyword: ', keyword)
     
-    top_k = 4
+    top_k = numberOfDocs
     relevant_docs = []
     if knowledge_base_id:    
         retriever = AmazonKnowledgeBasesRetriever(
@@ -2198,6 +2171,13 @@ def getResponse(connectionId, jsonBody):
     if "multi_region" in jsonBody:
         multi_region = jsonBody['multi_region']
     print('multi_region: ', multi_region)
+    
+    global grade_state
+    if "grade" in jsonBody:
+        grade_state = jsonBody['grade']
+    else:
+        grade_state = 'LLM'
+    print('grade_state: ', grade_state)
     
     global reference_docs, contentList
     reference_docs = []
