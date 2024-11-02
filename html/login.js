@@ -49,6 +49,7 @@ function onSubmit(e) {
     console.log(userInput.value);
     console.log(convtypeInput.value);
     console.log(multiRegionInput.value);
+    console.log(gradeInput.value);
 
     localStorage.setItem('userId',userInput.value);
     console.log('Save Profile> userId:', userInput.value)    

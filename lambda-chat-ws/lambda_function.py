@@ -1103,11 +1103,10 @@ def priority_search(query, relevant_docs, minSimilarity):
             Document(
                 page_content=content,
                 metadata={
-                    'name': doc.metadata['name'],
-                    'url': doc.metadata['url'],
-                    'from': doc.metadata['from'],
-                    'order':i,
-                    'score':0
+                    'location': doc.metadata['location'],
+                    'score':doc.metadata['score'],
+                    'source_metadata': doc.metadata['source_metadata'],
+                    'order':i                    
                 }
             )
         )
