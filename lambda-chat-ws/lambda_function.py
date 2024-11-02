@@ -1130,7 +1130,7 @@ def priority_search(query, relevant_docs, minSimilarity):
         source_metadata = document[0].metadata['source_metadata']
         
         score = document[1]
-        print(f"query: {query}, {order}: {source_metadata}, {score}")
+        print(f"query: {query}, {order}, {score}, {source_metadata}")
 
         relevant_docs[order].metadata['score'] = int(score)
 
