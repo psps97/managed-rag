@@ -1103,43 +1103,45 @@ def priority_search(query, relevant_docs, minSimilarity):
             Document(
                 page_content=content,
                 metadata={
-                    'location': doc.metadata['location'],
-                    'score':doc.metadata['score'],
-                    'source_metadata': doc.metadata['source_metadata'],
-                    'order':i                    
+                    'name': doc.metadata['name'],
+                    'url': doc.metadata['url'],
+                    'from': doc.metadata['from'],
+                    'order':i,
+                    'score':0
                 }
             )
         )
     #print('excerpts: ', excerpts)
 
-    embeddings = get_ps_embedding()
-    vectorstore_confidence = FAISS.from_documents(
-        excerpts,  # documents
-        embeddings  # embeddings
-    )            
-    rel_documents = vectorstore_confidence.similarity_search_with_score(
-        query=query,
-        k=len(relevant_docs)
-    )
-
     docs = []
-    for i, document in enumerate(rel_documents):
-        print(f'## Document(priority_search) query: {query}, {i+1}: {document}')
-
-        order = document[0].metadata['order']
-        source_metadata = document[0].metadata['source_metadata']
+    if len(excerpts):
+        embeddings = get_ps_embedding()
+        vectorstore_confidence = FAISS.from_documents(
+            excerpts,  # documents
+            embeddings  # embeddings
+        )            
+        rel_documents = vectorstore_confidence.similarity_search_with_score(
+            query=query,
+            k=len(relevant_docs)
+        )
         
-        score = document[1]
-        print(f"query: {query}, {order}, {score}, {source_metadata}")
+        for i, document in enumerate(rel_documents):
+            print(f'## Document(priority_search) query: {query}, {i+1}: {document}')
 
-        relevant_docs[order].metadata['score'] = int(score)
+            order = document[0].metadata['order']
+            name = document[0].metadata['name']
+            
+            score = document[1]
+            print(f"query: {query}, {order}: {name}, {score}")
 
-        if score < minSimilarity:
-            docs.append(relevant_docs[order])    
-    # print('selected docs: ', docs)
+            relevant_docs[order].metadata['score'] = int(score)
+
+            if score < minSimilarity:
+                docs.append(relevant_docs[order])    
+        # print('selected docs: ', docs)
 
     return docs
-    
+        
 # get auth
 region = os.environ.get('AWS_REGION', 'us-west-2')
 print('region: ', region)
