@@ -79,7 +79,7 @@ history_length = 0
 token_counter_history = 0
 grade_state = "LLM" # LLM, PRIORITY_SEARCH, OTHERS
  
-minDocSimilarity = 350
+minDocSimilarity = 400
 projectName = os.environ.get('projectName')
 maxOutputTokens = 4096
 data_source_id = ""
@@ -351,8 +351,8 @@ def get_chat():
     else:
         profile = LLM_for_chat[selected_chat]
     
-    print('length_of_models: ', length_of_models)
-    print('profile: ', json.dumps(profile))
+    #print('length_of_models: ', length_of_models)
+    #print('profile: ', json.dumps(profile))
         
     bedrock_region =  profile['bedrock_region']
     modelId = profile['model_id']
@@ -1154,6 +1154,8 @@ def priority_search(query, relevant_docs, minSimilarity):
         )
         
         for i, document in enumerate(rel_documents):
+            print(f'## Document(priority_search) query: {translated_query}, {i+1}: {document}')
+            
             order = document[0].metadata['order']
             name = document[0].metadata['name']
             
@@ -1162,8 +1164,7 @@ def priority_search(query, relevant_docs, minSimilarity):
 
             relevant_docs[order].metadata['score'] = int(score)
 
-            if score < minSimilarity:
-                print(f'## Document(priority_search) query: {translated_query}, {i+1}: {document}')
+            if score < minSimilarity:                
                 docs.append(relevant_docs[order])    
         
         # check duplication of docs
