@@ -1160,12 +1160,12 @@ def priority_search(query, relevant_docs, minSimilarity):
             name = document[0].metadata['name']
             
             score = document[1]
-            print(f"query: {query}, {order}: {name}, {score}")
+            print(f"query: {translated_query}, {order}: {name}, {score}")
 
             relevant_docs[order].metadata['score'] = int(score)
 
-            if score < minSimilarity:                
-                docs.append(relevant_docs[order])    
+            if score < minSimilarity:
+                docs.append(relevant_docs[order])
         
         # check duplication of docs
         contentList = []
