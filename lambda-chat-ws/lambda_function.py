@@ -1139,51 +1139,6 @@ def priority_search(query, relevant_docs, minSimilarity):
     # print('selected docs: ', docs)
 
     return docs
-
-def get_reference_from_knoweledge_base(relevent_docs, path, doc_prefix):
-    #print('path: ', path)
-    #print('doc_prefix: ', doc_prefix)
-    #print('prefix: ', f"/{doc_prefix}")
-    
-    docs = []
-    for i, document in enumerate(relevent_docs):
-        content = ""
-        if document.page_content:
-            content = document.page_content
-        
-        score = document.metadata["score"]        
-        print(f"{i}: {content}, score: {score}")
-        
-        link = ""
-        if "s3Location" in document.metadata["location"]:
-            link = document.metadata["location"]["s3Location"]["uri"] if document.metadata["location"]["s3Location"]["uri"] is not None else ""
-            
-            # print('link:', link)    
-            pos = link.find(f"/{doc_prefix}")
-            name = link[pos+len(doc_prefix)+1:]
-            encoded_name = parse.quote(name)
-            # print('name:', name)
-            link = f"{path}{doc_prefix}{encoded_name}"
-            
-        elif "webLocation" in document.metadata["location"]:
-            link = document.metadata["location"]["webLocation"]["url"] if document.metadata["location"]["webLocation"]["url"] is not None else ""
-            name = "WEB"
-
-        url = link
-        # print('url:', url)
-        
-        docs.append(
-            Document(
-                page_content=content,
-                metadata={
-                    'name': name,
-                    'url': url,
-                    'from': 'RAG'
-                },
-            )
-        )
-                    
-    return docs
     
 # get auth
 region = os.environ.get('AWS_REGION', 'us-west-2')
@@ -1568,6 +1523,46 @@ def print_doc(i, doc):
         text = doc.page_content
             
     print(f"{i}: {text}, metadata:{doc.metadata}")
+
+def get_docs_from_knowledge_base(documents):        
+    relevant_docs = []
+    for doc in documents:
+        content = ""
+        if doc.page_content:
+            content = doc.page_content
+        
+        score = doc.metadata["score"]
+        
+        link = ""
+        if "s3Location" in doc.metadata["location"]:
+            link = doc.metadata["location"]["s3Location"]["uri"] if doc.metadata["location"]["s3Location"]["uri"] is not None else ""
+            
+            # print('link:', link)    
+            pos = link.find(f"/{doc_prefix}")
+            name = link[pos+len(doc_prefix)+1:]
+            encoded_name = parse.quote(name)
+            # print('name:', name)
+            link = f"{path}{doc_prefix}{encoded_name}"
+            
+        elif "webLocation" in doc.metadata["location"]:
+            link = doc.metadata["location"]["webLocation"]["url"] if doc.metadata["location"]["webLocation"]["url"] is not None else ""
+            name = "WEB"
+
+        url = link
+        # print('url:', url)
+        
+        relevant_docs.append(
+            Document(
+                page_content=content,
+                metadata={
+                    'name': name,
+                    'score': score,
+                    'url': url,
+                    'from': 'RAG'
+                },
+            )
+        )    
+    return relevant_docs
                 
 def get_answer_using_knowledge_base(chat, text, connectionId, requestId):    
     global reference_docs
@@ -1586,24 +1581,20 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
             }},
         )
         
-        relevant_docs = retriever.invoke(text)
-        # print('relevant_docs: ', relevant_docs)
-        print('--> relevant_docs for knowledge base')
-        for i, doc in enumerate(relevant_docs):
+        docs = retriever.invoke(text)
+        # print('docs: ', docs)
+        print('--> docs from knowledge base')
+        for i, doc in enumerate(docs):
             print_doc(i, doc)
         
-        #selected_relevant_docs = []
-        #if len(relevant_docs)>=1:
-        #    print('start priority search')
-        #    selected_relevant_docs = priority_search(revised_question, relevant_docs, minDocSimilarity)
-        #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
-
+        relevant_docs = get_docs_from_knowledge_base(docs)
+        
+    # grading
     isTyping(connectionId, requestId, "grading...")
     
-    filtered_docs = grade_documents(text, relevant_docs)
+    filtered_docs = grade_documents(text, relevant_docs)    
     
-    # duplication checker
-    filtered_docs = check_duplication(filtered_docs)
+    filtered_docs = check_duplication(filtered_docs) # duplication checker
             
     relevant_context = ""
     for i, document in enumerate(filtered_docs):
@@ -1618,7 +1609,7 @@ def get_answer_using_knowledge_base(chat, text, connectionId, requestId):
     msg = query_using_RAG_context(connectionId, requestId, chat, relevant_context, text)
     
     if len(filtered_docs):
-        reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)  
+        reference_docs += filtered_docs 
             
     return msg
     
@@ -1850,22 +1841,18 @@ def search_by_knowledge_base(keyword: str) -> str:
             }},
         )
         
-        relevant_docs = retriever.invoke(keyword)
-        # print('relevant_docs: ', relevant_docs)
-        print('--> relevant_docs from knowledge base')
-        for i, doc in enumerate(relevant_docs):
+        docs = retriever.invoke(keyword)
+        # print('docs: ', docs)
+        print('--> docs from knowledge base')
+        for i, doc in enumerate(docs):
             print_doc(i, doc)
-        
-        #selected_relevant_docs = []
-        #if len(relevant_docs)>=1:
-        #    print('start priority search')
-        #    selected_relevant_docs = priority_search(revised_question, relevant_docs, minDocSimilarity)
-        #    print('selected_relevant_docs: ', json.dumps(selected_relevant_docs))
+            
+        relevant_docs = get_docs_from_knowledge_base(docs)
 
+    # grading        
     filtered_docs = grade_documents(keyword, relevant_docs)
     
-    # duplication checker
-    filtered_docs = check_duplication(filtered_docs)
+    filtered_docs = check_duplication(filtered_docs) # duplication checker
             
     relevant_context = ""
     for i, document in enumerate(filtered_docs):
@@ -1877,7 +1864,7 @@ def search_by_knowledge_base(keyword: str) -> str:
     print('relevant_context: ', relevant_context)
     
     if len(filtered_docs):
-        reference_docs += get_reference_from_knoweledge_base(filtered_docs, path, doc_prefix)
+        reference_docs += filtered_docs
         
     # print('reference_docs: ', reference_docs)
         
