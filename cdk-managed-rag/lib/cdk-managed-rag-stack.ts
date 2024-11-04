@@ -202,7 +202,7 @@ export class CdkManagedRagStack extends cdk.Stack {
             },
             {
               ResourceType: "collection",
-              Resource: [`collection/*`],              
+              Resource: [`collection/${collectionName}`],              
             }
           ],
           AllowFromPublic: true,          
