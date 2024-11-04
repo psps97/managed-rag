@@ -1227,7 +1227,7 @@ def initiate_knowledge_base():
     #########################
     if(is_not_exist(vectorIndexName)):
         print(f"creating opensearch index... {vectorIndexName}")        
-        body={
+        body={ 
             'settings':{
                 "index.knn": True,
                 "index.knn.algo_param.ef_search": 512,
