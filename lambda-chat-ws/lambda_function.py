@@ -1161,7 +1161,7 @@ def priority_search(query, relevant_docs, minSimilarity):
             
             score = document[1]
             print(f"query: {translated_query}, {order}: {name}, {score}")
-
+  
             relevant_docs[order].metadata['score'] = int(score)
 
             if score < minSimilarity:
@@ -2234,7 +2234,7 @@ def getResponse(connectionId, jsonBody):
     print(f'selected_chat: {selected_chat}, bedrock_region: {bedrock_region}, modelId: {modelId}')
       
     chat = get_chat()    
-    bedrock_embedding = get_embedding()
+    # bedrock_embedding = get_embedding()
 
     # allocate memory
     if userId in map_chain:  
