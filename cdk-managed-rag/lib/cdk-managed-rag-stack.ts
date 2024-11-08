@@ -34,7 +34,8 @@ const useParallelRAG = 'true';
 const numberOfRelevantDocs = '6';
 
 const knowledge_base_name = projectName;
-const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`;
+// const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0`;
+const parsingModelArn = `arn:aws:bedrock:${region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`;
 const embeddingModelArn = `arn:aws:bedrock:${region}::foundation-model/amazon.titan-embed-text-v2:0`;
 
 const claude3_5_sonnet = [
@@ -197,11 +198,11 @@ export class CdkManagedRagStack extends cdk.Stack {
           Rules: [
             {
               ResourceType: "dashboard",
-              Resource: [`collection/${netPolicyName}`],
+              Resource: [`collection/${collectionName}`],
             },
             {
               ResourceType: "collection",
-              Resource: [`collection/*`],              
+              Resource: [`collection/${collectionName}`],              
             }
           ],
           AllowFromPublic: true,          
